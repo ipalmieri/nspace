@@ -1,0 +1,6 @@
+*.o
+*.a
+*.Po
+*~
+engine
+config.log
