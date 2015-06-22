@@ -1,7 +1,6 @@
 #ifndef __TIMEPOINT_H__
 #define __TIMEPOINT_H__
 
-#include <stdint.h>
 #include "date.h"
 
 namespace tools

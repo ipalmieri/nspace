@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sstream>
-#include <cerrno>
 #include "aux.h"
 
 using namespace std;

@@ -14,7 +14,7 @@ namespace neural
 
    typedef unsigned short groupId;
    typedef tools::dnode<neuron *, synapse *> gnode;   
-   typedef gnode::dnodeMap nodeMap;
+   typedef typename gnode::dnodeMap nodeMap;
 
    class neuron 
    {

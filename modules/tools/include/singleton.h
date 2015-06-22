@@ -2,7 +2,6 @@
 #define __SINGLETON_H__
 
 #include <stdio.h>
-#include <stdlib.h>
 
 namespace tools
 {
@@ -19,7 +18,7 @@ namespace tools
 	 if (!_instance)
 	 {
 	    _instance = new T;
-	    atexit(stopInstance);
+	    std::atexit(stopInstance);
 	 }
 	 return _instance;
       }

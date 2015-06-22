@@ -10,7 +10,7 @@ namespace neural
    class neuron;
    
    typedef tools::dedge<neuron *, synapse *> gedge;
-   typedef gedge::dedgeMap edgeMap;
+   typedef typename gedge::dedgeMap edgeMap;
   
    class synapse 
    {

@@ -1,7 +1,7 @@
 #ifndef __MSOCKET_H__
 #define __MSOCKET_H__
 
-#include <stdint.h>
+#include <cstdint>
 #include <cstdlib>
 
 namespace tools

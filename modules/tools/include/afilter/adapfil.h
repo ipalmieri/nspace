@@ -74,7 +74,7 @@ namespace tools
 
      protected:
 
-      cMatrixN _Pa;
+      cMatrixN _Pmat;
       Real _eps;
       Real _lambda;
    };

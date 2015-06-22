@@ -30,7 +30,7 @@ nspace_LDADD = \
 		$(LIBOBJS)
 
 
-AM_LDFLAGS = -ljpeg  
+AM_LDFLAGS = -ljpeg 
 
 
 
