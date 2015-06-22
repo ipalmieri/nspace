@@ -43,7 +43,7 @@ namespace tools
 
       void appendList(const poolList &l)
       {
-	 for (auto it = l.begin(); it != l.end(); ++it)
+	 for (typename poolList::iterator it = l.begin(); it != l.end(); ++it)
 	    addElement(*it);
       }
 
@@ -73,7 +73,7 @@ namespace tools
 
 	 if (clearit)
 	 {
-	    for (auto it = _elements.begin(); it != _elements.end(); ++it)
+	    for (typename poolList::iterator it = _elements.begin(); it != _elements.end(); ++it)
 	    {
 	       outlist.push_back(*it);
 	    }

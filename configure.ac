@@ -34,7 +34,7 @@ fi
  
 ##########################################################################
 
-AM_CXXFLAGS="$AM_CXXFLAGS -std=c++11"
+AM_CXXFLAGS="$AM_CXXFLAGS"
 
 # distribute additional compiler and linker flags
 # --> set these variables instead of CXXFLAGS or LDFLAGS
