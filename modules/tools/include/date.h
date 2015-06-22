@@ -1,6 +1,7 @@
 #ifndef __DATE_H__
 #define __DATE_H__
 
+#include <cstdlib>
 #include <string>
 
 namespace tools
