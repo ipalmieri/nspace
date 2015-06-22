@@ -1,0 +1,9 @@
+.libs
+.deps
+.dirstamp
+*.o
+*.a
+*.Po
+*~
+engine
+config.log
