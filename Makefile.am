@@ -55,8 +55,8 @@ libtools_a_HEADERS = 	\
 			include/timemark.h \
 			include/timepoint.h \
 			include/mnet.h \
-			include/net/msocket.h
-
+			include/net/tcpsocket.h \
+			include/net/tcpserver.h
 
 
 # the sources to add to the library and to add to the source distribution
@@ -83,7 +83,9 @@ libtools_a_SOURCES =	\
 			src/multimedia/imagemap.cpp \
 			src/timemark.cpp \
 			src/timepoint.cpp \
-			src/net/msocket.cpp
+			src/net/tcpsocket.cpp \
+			src/net/tcpserver.cpp
+
 
 
 ###############################################################################

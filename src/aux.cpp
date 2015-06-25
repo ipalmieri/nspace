@@ -103,11 +103,22 @@ string tools::istr(const int &x)
     return temp.str();
 }
 
-// return last error
-// fix this: should use strerror_r to be thread safe
+// return string with strerror(errno)
 string tools::lastError() 
 {
-   char *e = strerror(errno);
+   char e[ERROR_BUFSIZE];
 
-   return e ? e : "NULL";
+   if (strerror_r(errno, e, ERROR_BUFSIZE) != 0)
+   {
+      return string("Insufficient storage for error string");
+   }
+
+   return string(e);
 }
+
+// return formatted error string
+string tools::funcLastError(const string &funcname)
+{
+   return funcname + "(): " + lastError();
+}
+
