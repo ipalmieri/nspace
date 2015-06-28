@@ -108,12 +108,13 @@ string tools::lastError()
 {
    char e[ERROR_BUFSIZE];
 
-   if (strerror_r(errno, e, ERROR_BUFSIZE) != 0)
-   {
-      return string("Insufficient storage for error string");
-   }
+   // for POSIX complient version
+   // compile with-D_XOPEN_SOURCE=600 or -D_POSIX_C_SOURCE=200112L
+   // without -D_GNU_SOURCE is needed 
+   //if (strerror_r(errno, e, ERROR_BUFSIZE) != 0)
+   //   return string("Can't provide error: check strerror_r()");
 
-   return string(e);
+   return string(strerror_r(errno, e, ERROR_BUFSIZE));
 }
 
 // return formatted error string
