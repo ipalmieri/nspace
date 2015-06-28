@@ -35,8 +35,8 @@ namespace tools
       void connect(const std::string &hostname, const uint16_t &port);
       void close();      
 
-      bool sendMsg(const tcpMessage *msg);
-      bool recvMsg(const tcpMessage *msg);
+      bool sendMsg(tcpMessage *msg);
+      bool recvMsg(tcpMessage *msg);
 
       bool isGood() { return _isGood; }
       bool isConnected();
@@ -52,28 +52,26 @@ namespace tools
       void enableReuseAddr(const bool &val);
       void enableKeepAlive(const bool &val);
       
+      void setTimeout(const uint32_t &timeout) { _socketTimeout = timeout; }
       void setRecvLen(const size_t &size);
       void setSendLen(const size_t &size);
 
      protected:
       
+      int getSocketOpts();
+      void setSocketOpts(const int &opts);
+
+
       bool _isGood;
       bool _isConnected;
       std::string _lastStatus;
 
       int _sockfd;
 
-      // socket options
-      bool _enableBlocking;
-      bool _enableDebug;
-      bool _enableLinger;
-      bool _enableReuseAddr;
-      bool _enableKeepAlive;
-
+      uint32_t _socketTimeout;
       size_t _sendLength;
       size_t _recvLength;
-      
-
+ 
      private:
 
       //asignment and copy

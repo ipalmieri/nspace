@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "aux.h"
 
 #include <iostream>
@@ -18,17 +19,13 @@ tcpSocket::tcpSocket()
 {
    _isGood = true;
    _isConnected = false;
-
-   _enableBlocking = true;
-   _enableDebug = false;
-   _enableLinger = false;
-   _enableReuseAddr = false;
-   _enableKeepAlive = false;
    
    _sockfd = -1;
 
    setRecvLen(NET_RECVLEN);
    setSendLen(NET_SENDLEN);
+
+   _socketTimeout = 0;
 }
 
 
@@ -37,7 +34,7 @@ tcpSocket::~tcpSocket()
    close();
 }  
 
-
+// fix this: should do non_blockin connect, with timeout
 void tcpSocket::connect(const std::string &hostname, const uint16_t &port)
 {
    if (isConnected()) return;
@@ -177,26 +174,21 @@ socketHost tcpSocket::getRemoteAddr()
 
    if (isConnected() && getpeername(_sockfd, (struct sockaddr *) &saddr, &saddr_len) != 0)
    {
-      
       _isGood = false;
-      _lastStatus = tools::funcLastError("getpeername");
-      
+      _lastStatus = tools::funcLastError("getpeername");  
    }
    else
    {
-
       if (saddr.ss_family == AF_INET)  // IPV4
-      {
-	 
+      {	 
 	 struct sockaddr_in *saddr4 = (struct sockaddr_in *) &saddr;
 	 
 	 port = ntohs(saddr4->sin_port);
 	 
 	 inet_ntop(AF_INET, &saddr4->sin_addr, ipstr, sizeof(ipstr));
-      
       } 
-      else { // IPV6
-	 
+      else  // IPV6
+      { 
 	 struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *) &saddr;
 	 
 	 port = ntohs(saddr6->sin6_port);
@@ -209,33 +201,30 @@ socketHost tcpSocket::getRemoteAddr()
    }
 
    return ret;
-
 }
 
 
 void tcpSocket::setRecvLen(const size_t &size)
 {
-   _recvLength = min((int) size, NET_RECVMAX);
-
-   //_recvBuffer = (char *) realloc(_recvBuffer, _recvLength); 
+   _recvLength = min(size, (size_t) NET_RECVMAX);
 }
 
 
 void tcpSocket::setSendLen(const size_t &size)
 {
-   _sendLength = min((int) size, NET_SENDMAX);
-
-   //_sendBuffer = (char *) realloc(_sendBuffer, _sendLength); 
+   _sendLength = min(size, (size_t) NET_SENDMAX);
 }
 
 
-bool tcpSocket::sendMsg(const tcpMessage *msg)
+bool tcpSocket::sendMsg(tcpMessage *msg)
 {
    char *prt = NULL;
-
    size_t len;
    size_t sent_total = 0;
-   size_t sent_now = 0;
+   ssize_t sent_now = 0;
+   fd_set writeset;
+   struct timeval tout;
+   int retval;
 
    prt = msg->payload;
 
@@ -243,27 +232,194 @@ bool tcpSocket::sendMsg(const tcpMessage *msg)
    {  
       len = min(msg->length - sent_total, _sendLength);
 
-      // select c timeout
+      FD_ZERO(&writeset);
+      FD_SET(_sockfd, &writeset);
+      
+      tout.tv_sec = _socketTimeout / 1000;
+      tout.tv_usec = _socketTimeout % 1000;
 
-      sent_now = send(_sockfd, &(prt[sent_total]), len, 0);
+      retval = select(_sockfd + 1, NULL, &writeset, NULL, &tout);
 
-      if (sent_now == -1)
+      if (retval == -1)
       {
-	 _lastStatus = tools::funcLastError("send");
+	 _lastStatus = tools::funcLastError("select");
 
 	 _isGood = false;
+
+	 return false;
       }
+      else if (retval == 0)
+      {
+	 _lastStatus = "select(): write timeout";
 
-      sent_total += sent_now;
+	 return false;
+      }
+      else
+      {
+
+	 sent_now = send(_sockfd, &(prt[sent_total]), len, 0);
+    
+	 if (sent_now < 0)
+	 {
+	    if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+	    {
+	       _lastStatus = tools::funcLastError("send");
+
+	       _isGood = false;
+	    }
+	 }
+	 else
+	 {
+	    sent_total += sent_now;
+	 }
+      }
    }
-
+      
+    
    return (sent_total == msg->length);
 }
 
 
-bool tcpSocket::recvMsg(const tcpMessage *msg)
+bool tcpSocket::recvMsg(tcpMessage *msg)
+{  
+   char *prt = NULL;
+   ssize_t len;
+   ssize_t recv_total = 0;
+   fd_set readset;
+   struct timeval tout;
+   int retval;
+
+   if (msg->length <= 0) 
+   {
+      _lastStatus = "recvMsg(): zero-length msg";
+      return false;
+   }
+
+
+   prt = msg->payload;
+   len = msg->length;
+   msg->length = 0;
+
+   FD_ZERO(&readset);
+   FD_SET(_sockfd, &readset);
+      
+   tout.tv_sec = _socketTimeout / 1000;
+   tout.tv_usec = _socketTimeout % 1000;
+
+   retval = select(_sockfd + 1, &readset, NULL, NULL, &tout);
+
+   if (retval == -1)
+   {
+	 if (errno != EINTR)
+	 {
+	    _lastStatus = tools::funcLastError("select");
+
+	    _isGood = false;
+	 }
+
+	 return false;      
+   }
+   else if (retval == 0 && _socketTimeout != 0)
+   {
+      _lastStatus = "select(): read timeout";
+      _isGood = false;
+
+      return false;
+   }
+   else
+   {
+      recv_total = recv(_sockfd, prt, len, 0);
+
+      if (recv_total < 0)
+      {
+
+	 _lastStatus = tools::funcLastError("recv");
+	 
+	 if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+	    _isGood = false;
+
+      }
+      else
+      {
+	 msg->length = recv_total;
+      }
+   }
+    
+   return (recv_total > 0);
+}
+
+
+int tcpSocket::getSocketOpts()
 {
-   
+   int copts;
+
+   copts = fcntl(_sockfd, F_GETFL);
+
+   if (copts < 0) {
+
+      _isGood = false;
+
+      _lastStatus = tools::funcLastError("fcntl");
+   }
+
+   return copts;
+}
+
+
+void tcpSocket::setSocketOpts(const int &opts)
+{
+   if (fcntl(_sockfd, F_SETFL, opts) < 0) {
+
+      _isGood = false;
+
+      _lastStatus = tools::funcLastError("fcntl");
+   }  
+}
+
+void tcpSocket::enableBlocking(const bool &val)
+{
+   int copts = getSocketOpts();
+
+   if (val)
+      setSocketOpts(copts & ~O_NONBLOCK);
+   else
+      setSocketOpts(copts | O_NONBLOCK);
+
+}
+
+
+void tcpSocket::enableDebug(const bool &val)
+{
+   int optval = (val)? 1 : 0;
+
+   setsockopt(_sockfd, SOL_SOCKET, SO_DEBUG, &optval, sizeof(optval));
+}
+
+
+void tcpSocket::enableLinger(const bool &val)
+{
+   struct linger optval;
+
+   optval.l_onoff = (val)? 1 : 0;
+   optval.l_linger = _socketTimeout;
+
+   setsockopt(_sockfd, SOL_SOCKET, SO_LINGER, &optval, sizeof(optval));
+}
+
+
+void tcpSocket::enableReuseAddr(const bool &val)
+{
+   int optval = (val)? 1 : 0;
+
+   setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+}
+
+
+void tcpSocket::enableKeepAlive(const bool &val)
+{
+   int optval = (val)? 1 : 0;
+
+   setsockopt(_sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
 }
 
 
