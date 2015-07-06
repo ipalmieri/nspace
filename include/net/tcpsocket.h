@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
+#include "adefs.h"
 
 #define NET_ADDRLEN 1024     // maximum length of an IPv(4/6) address within a string
 #define NET_RECVLEN 1024     // default buffer size for recvMsg
@@ -27,6 +28,9 @@ namespace tools
    
    class tcpSocket // : public stateObject
    {
+      CANNOT_COPY(tcpSocket);
+      friend class tcpServer;
+
      public:
 
       tcpSocket();
@@ -72,11 +76,6 @@ namespace tools
       size_t _sendLength;
       size_t _recvLength;
  
-     private:
-
-      //asignment and copy
-
-
    };
 }
 
