@@ -3,6 +3,12 @@
 
 #include <complex>
 
+#define CANNOT_COPY(class)		    \
+   private:				    \
+     class(const class&) = delete;	    \
+     void operator=(const class &) = delete \
+
+
 namespace tools
 {
    typedef double Real;

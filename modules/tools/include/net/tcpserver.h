@@ -1,31 +1,43 @@
 #ifndef __TCPSERVER_H__
 #define __TCPSERVER_H__
 
-#include <cstdint>
-#include <cstdlib>
 #include <string>
 #include "tcpsocket.h"
 
+#define NET_BACKLOG 1024
 
 namespace tools
 {
    class tcpServer
    {
-      tcpServer(const uint16_t &port);
+      CANNOT_COPY(tcpServer);
+
+
+     public:
+
+      tcpServer(const uint16_t &port, const uint &backlog=NET_BACKLOG);
+      tcpServer(const std::string &addr, const uint16_t &port, const uint &backlog=NET_BACKLOG);
       ~tcpServer();
 
       tcpSocket *accept();
       void close();
       
-     protected:
-      
-      void bind();
-      void listen();
-         
-     private:
+      bool isGood() { return _isGood; }
+      std::string lastStatus() const { return _lastStatus; }
 
-      // assign and copy
-      
+
+     protected:
+
+      void bind(const std::string &addr, const uint16_t &port);
+      void listen(const uint &backlog);
+
+      int _sock4;
+      int _sock6;
+
+      std::string _lastStatus;
+      bool _isGood;
+
+      uint16_t _port;
    };
 }
 

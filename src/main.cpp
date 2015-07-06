@@ -14,52 +14,31 @@ using namespace tools;
 int main()
 {
    
-   tcpSocket msock;
+   tcpServer mserv(9999);
 
-   msock.connect("www.google.com", 80);
-
-   socketHost sl = msock.getLocalAddr();
-   socketHost sr = msock.getRemoteAddr();
-
-   cout << "Local: " << sl.addr << " " << to_string(sl.port) << endl;
-   cout << "Remote: " << sr.addr << " " << to_string(sr.port) << endl;
-
+   tcpSocket *ssock = mserv.accept();
 
    tcpMessage msg;
-
-   msg.payload = "GET / HTTP/1.1\r\nHost:www.google.com\r\n\r\n";
-   msg.length = strlen(msg.payload);
-
-   if (!msock.sendMsg(&msg))
-      cout << msock.lastStatus() << endl;
-
    msg.payload = (char *) malloc(sizeof(char)*128);
    msg.length = 127;
 
-   msock.enableBlocking(false);
-   msock.setTimeout(20000);
+   //ssock.enableBlocking(false);
+   //ssock.setTimeout(20000);
    
-
-   int i = 0;
-   while (msock.isGood() && i < 100)
+   while (ssock->isGood())
    {
-      cout << endl << "##### ITERATION " << to_string(i) << endl;
-
-      msock.recvMsg(&msg);
+      ssock->recvMsg(&msg);
       msg.payload[msg.length] = '\0';
 
       //cout << to_string(msg.length) << ": " << string(msg.payload) << endl;
       cout << string(msg.payload);
 
-      msg.length = 127;
-   
-      i++;
+      msg.length = 127;      
    }
-
-   cout << endl;
-
-   cout << msock.lastStatus() << endl;
    
+   cout << mserv.lastStatus() << endl;
+
+   delete ssock;
 
    return 0;
 }

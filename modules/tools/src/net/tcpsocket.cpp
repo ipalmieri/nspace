@@ -9,7 +9,6 @@
 #include <fcntl.h>
 #include "aux.h"
 
-#include <iostream>
 
 using namespace std;
 using namespace tools;
@@ -242,11 +241,14 @@ bool tcpSocket::sendMsg(tcpMessage *msg)
 
       if (retval == -1)
       {
-	 _lastStatus = tools::funcLastError("select");
+	 if (errno != EINTR)
+	 {
+	    _lastStatus = tools::funcLastError("select");
 
-	 _isGood = false;
+	    _isGood = false;
+	 }
 
-	 return false;
+	 return false;      
       }
       else if (retval == 0)
       {
@@ -261,12 +263,12 @@ bool tcpSocket::sendMsg(tcpMessage *msg)
     
 	 if (sent_now < 0)
 	 {
+	    
+	    _lastStatus = tools::funcLastError("send");
+	    
 	    if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
-	    {
-	       _lastStatus = tools::funcLastError("send");
-
 	       _isGood = false;
-	    }
+	    
 	 }
 	 else
 	 {
@@ -308,6 +310,7 @@ bool tcpSocket::recvMsg(tcpMessage *msg)
 
    retval = select(_sockfd + 1, &readset, NULL, NULL, &tout);
 
+
    if (retval == -1)
    {
 	 if (errno != EINTR)
@@ -322,7 +325,7 @@ bool tcpSocket::recvMsg(tcpMessage *msg)
    else if (retval == 0 && _socketTimeout != 0)
    {
       _lastStatus = "select(): read timeout";
-      _isGood = false;
+      //_isGood = false;
 
       return false;
    }
