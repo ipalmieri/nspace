@@ -14,31 +14,49 @@ using namespace tools;
 int main()
 {
    
-   tcpServer mserv(9999);
+   tcpSocket msock;
 
-   tcpSocket *ssock = mserv.accept();
+   msock.connect("zero.tr", 80);
 
-   tcpMessage msg;
-   msg.payload = (char *) malloc(sizeof(char)*128);
-   msg.length = 127;
+   socketHost sl = msock.getLocalAddr();
+   socketHost sr = msock.getRemoteAddr();
 
-   //ssock.enableBlocking(false);
-   //ssock.setTimeout(20000);
+   cout << "Local: " << sl.addr << " " << to_string(sl.port) << endl;
+   cout << "Remote: " << sr.addr << " " << to_string(sr.port) << endl;
+
+
+   tcpMessage msg(256);
+
+   msg.readString("GET / HTTP/1.1\r\nBHost:zero.tr\r\n\r\n");
+
+
+   if (msock.sendMsg(&msg) != msg.length())
+      cout << msock.lastStatus() << endl;
+
    
-   while (ssock->isGood())
+
+   //msg = tcpMessage(1);
+   msock.enableBlocking(false);
+   
+
+   int i = 0;
+   while (msock.isConnected() && i < 100)
    {
-      ssock->recvMsg(&msg);
-      msg.payload[msg.length] = '\0';
+      cout << endl << "##### ITERATION " << to_string(i) << endl;
+
+      msock.recvMsg(&msg);
 
       //cout << to_string(msg.length) << ": " << string(msg.payload) << endl;
-      cout << string(msg.payload);
-
-      msg.length = 127;      
-   }
+      cout << string(msg.payload(), msg.length());
    
-   cout << mserv.lastStatus() << endl;
+      //char c = string(msg.payload(), msg.length())[0];   printf("\nc: %d\n", c);
 
-   delete ssock;
+      i++;
+   }
+
+   cout << endl;
+
+   cout << msock.lastStatus() << endl;
 
    return 0;
 }

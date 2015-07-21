@@ -9,7 +9,6 @@
 #include <fcntl.h>
 #include "aux.h"
 
-
 using namespace std;
 using namespace tools;
 
@@ -23,8 +22,6 @@ tcpSocket::tcpSocket()
 
    setRecvLen(NET_RECVLEN);
    setSendLen(NET_SENDLEN);
-
-   _socketTimeout = 0;
 }
 
 
@@ -105,15 +102,6 @@ void tcpSocket::close()
    _isConnected = false;
 }
 
-
-bool tcpSocket::isConnected()
-{
-   //fix this: should test sockfd periodically
-
-   _isConnected = _isGood && _isConnected;
-
-   return  _isConnected;
-}
 
 socketHost tcpSocket::getLocalAddr() 
 {
@@ -215,140 +203,77 @@ void tcpSocket::setSendLen(const size_t &size)
 }
 
 
-bool tcpSocket::sendMsg(tcpMessage *msg)
+size_t tcpSocket::sendMsg(tcpMessage *msg)
 {
-   char *prt = NULL;
+   char *ptr;
    size_t len;
-   size_t sent_total = 0;
-   ssize_t sent_now = 0;
-   fd_set writeset;
-   struct timeval tout;
-   int retval;
+   int sent_total = 0;
 
-   prt = msg->payload;
+   ptr = (char *) msg->payload();
+   len = min(msg->length(), _sendLength);
 
-   while (sent_total != msg->length && _isGood)
-   {  
-      len = min(msg->length - sent_total, _sendLength);
-
-      FD_ZERO(&writeset);
-      FD_SET(_sockfd, &writeset);
-      
-      tout.tv_sec = _socketTimeout / 1000;
-      tout.tv_usec = _socketTimeout % 1000;
-
-      retval = select(_sockfd + 1, NULL, &writeset, NULL, &tout);
-
-      if (retval == -1)
-      {
-	 if (errno != EINTR)
-	 {
-	    _lastStatus = tools::funcLastError("select");
-
-	    _isGood = false;
-	 }
-
-	 return false;      
-      }
-      else if (retval == 0)
-      {
-	 _lastStatus = "select(): write timeout";
-
-	 return false;
-      }
-      else
-      {
-
-	 sent_now = send(_sockfd, &(prt[sent_total]), len, 0);
+   sent_total = send(_sockfd, ptr, len, 0);
     
-	 if (sent_now < 0)
-	 {
-	    
-	    _lastStatus = tools::funcLastError("send");
-	    
-	    if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
-	       _isGood = false;
-	    
-	 }
-	 else
-	 {
-	    sent_total += sent_now;
-	 }
+   if (sent_total < 0)
+   {
+      if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+      {
+	 _isGood = false;
+	 _lastStatus = tools::funcLastError("send");
       }
    }
-      
-    
-   return (sent_total == msg->length);
+
+   return max(0, sent_total);
 }
 
 
-bool tcpSocket::recvMsg(tcpMessage *msg)
-{  
-   char *prt = NULL;
-   ssize_t len;
-   ssize_t recv_total = 0;
+size_t tcpSocket::recvMsg(tcpMessage *msg)
+{
+   char *ptr;
+   size_t len;
+   int recv_total = 0;
+   
+   ptr = (char *) msg->payload();
+   len = min(msg->maxlen(), _recvLength);
+
+   /*
    fd_set readset;
-   struct timeval tout;
-   int retval;
-
-   if (msg->length <= 0) 
-   {
-      _lastStatus = "recvMsg(): zero-length msg";
-      return false;
-   }
-
-
-   prt = msg->payload;
-   len = msg->length;
-   msg->length = 0;
+   struct timeval to = {0, 0};
 
    FD_ZERO(&readset);
    FD_SET(_sockfd, &readset);
-      
-   tout.tv_sec = _socketTimeout / 1000;
-   tout.tv_usec = _socketTimeout % 1000;
 
-   retval = select(_sockfd + 1, &readset, NULL, NULL, &tout);
+   int ret = select(_sockfd+1, &readset, NULL, NULL, NULLb);
 
-
-   if (retval == -1)
+   if (ret <=0)
    {
-	 if (errno != EINTR)
-	 {
-	    _lastStatus = tools::funcLastError("select");
-
-	    _isGood = false;
-	 }
-
-	 return false;      
+      msg->setLength(0);
+      return 0;
    }
-   else if (retval == 0 && _socketTimeout != 0)
-   {
-      _lastStatus = "select(): read timeout";
-      //_isGood = false;
+   */
 
-      return false;
-   }
-   else
-   {
-      recv_total = recv(_sockfd, prt, len, 0);
 
-      if (recv_total < 0)
+   recv_total = recv(_sockfd, ptr, len, 0);
+
+   if (recv_total < 0)
+   {
+      if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
       {
-
 	 _lastStatus = tools::funcLastError("recv");
-	 
-	 if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
-	    _isGood = false;
-
-      }
-      else
-      {
-	 msg->length = recv_total;
+	 _isGood = false;
       }
    }
-    
-   return (recv_total > 0);
+   else if (recv_total == 0 && len != 0)
+   {
+      _lastStatus = "Disconnected";
+      _isConnected = false;
+   }
+   
+   recv_total = max(0, recv_total);
+
+   msg->setLength(recv_total);
+   
+   return recv_total;
 }
 
 
