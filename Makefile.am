@@ -56,7 +56,8 @@ libtools_a_HEADERS = 	\
 			include/timepoint.h \
 			include/mnet.h \
 			include/net/tcpsocket.h \
-			include/net/tcpserver.h
+			include/net/tcpserver.h \
+			include/net/tcpmsg.h
 
 
 # the sources to add to the library and to add to the source distribution
@@ -84,7 +85,8 @@ libtools_a_SOURCES =	\
 			src/timemark.cpp \
 			src/timepoint.cpp \
 			src/net/tcpsocket.cpp \
-			src/net/tcpserver.cpp
+			src/net/tcpserver.cpp \
+			src/net/tcpmsg.cpp
 
 
 

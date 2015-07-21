@@ -120,6 +120,6 @@ string tools::lastError()
 // return formatted error string
 string tools::funcLastError(const string &funcname)
 {
-   return funcname + "(): " + lastError();
+   return ((funcname.length() > 0)? funcname + "(): " : "") + lastError();
 }
 

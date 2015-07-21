@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <string>
 #include "adefs.h"
+#include "tcpmsg.h"
 
 #define NET_ADDRLEN 1024     // maximum length of an IPv(4/6) address within a string
 #define NET_RECVLEN 1024     // default buffer size for recvMsg
@@ -15,11 +16,6 @@
 
 namespace tools
 {
-   typedef struct {
-      char *payload;
-      size_t length;
-   } tcpMessage;
-
    typedef struct {
       std::string addr;
       uint16_t port;
@@ -39,11 +35,11 @@ namespace tools
       void connect(const std::string &hostname, const uint16_t &port);
       void close();      
 
-      bool sendMsg(tcpMessage *msg);
-      bool recvMsg(tcpMessage *msg);
+      size_t sendMsg(tcpMessage *msg);
+      size_t recvMsg(tcpMessage *msg);
 
-      bool isGood() { return _isGood; }
-      bool isConnected();
+      inline bool isGood() { return _isGood; }
+      inline bool isConnected() { _isConnected = _isGood && _isConnected; return _isConnected; }
       std::string lastStatus() const { return _lastStatus; }
 
       socketHost getLocalAddr();
@@ -56,7 +52,6 @@ namespace tools
       void enableReuseAddr(const bool &val);
       void enableKeepAlive(const bool &val);
       
-      void setTimeout(const uint32_t &timeout) { _socketTimeout = timeout; }
       void setRecvLen(const size_t &size);
       void setSendLen(const size_t &size);
 
