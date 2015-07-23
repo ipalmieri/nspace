@@ -90,4 +90,7 @@ void tcpMessage::readString(const string &str)
    strncpy(_payload, str.c_str(), _length);
 }
    
-
+string tcpMessage::writeString() const
+{
+   return string(_payload, _length);
+}
