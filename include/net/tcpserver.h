@@ -12,7 +12,6 @@ namespace tools
    {
       CANNOT_COPY(tcpServer);
 
-
      public:
 
       tcpServer(const uint16_t &port, const uint &backlog=NET_BACKLOG);
@@ -33,11 +32,10 @@ namespace tools
 
       int _sock4;
       int _sock6;
+      uint16_t _port;
 
       std::string _lastStatus;
       bool _isGood;
-
-      uint16_t _port;
    };
 }
 

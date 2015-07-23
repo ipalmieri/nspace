@@ -17,7 +17,6 @@ tcpSocket::tcpSocket()
 {
    _isGood = true;
    _isConnected = false;
-   
    _sockfd = -1;
 
    setRecvLen(NET_RECVLEN);
@@ -30,14 +29,15 @@ tcpSocket::~tcpSocket()
    close();
 }  
 
+
 // fix this: should do non_blockin connect, with timeout
 void tcpSocket::connect(const std::string &hostname, const uint16_t &port)
 {
-   if (isConnected()) return;
-
    struct addrinfo *result, *rp;
    struct addrinfo hints;
    int sock, ret;
+
+   if (_isConnected || _sockfd > 0) close();
 
    memset(&hints, 0, sizeof(struct addrinfo));
    hints.ai_family = AF_UNSPEC;
@@ -49,9 +49,7 @@ void tcpSocket::connect(const std::string &hostname, const uint16_t &port)
 
    if (ret != 0) 
    {
-      _isGood = false;
       _lastStatus = "getaddrinfo(): " + string(gai_strerror(ret));
-
       return;
    }
 
@@ -64,18 +62,18 @@ void tcpSocket::connect(const std::string &hostname, const uint16_t &port)
 	 if (::connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
 	 {
 	    _sockfd = sock;
-	   
 	    _isConnected = true;
-	    _isGood = true;
 	 }
 	 else
 	 {
 	    _lastStatus = tools::funcLastError("connect");
+	    ::close(sock);
 	 }
       }
       else
       {
 	 _lastStatus = tools::funcLastError("socket");
+	 _isGood = false;
       }
    }
 
@@ -87,15 +85,13 @@ void tcpSocket::close()
 {
    int ret = 0;
 
-   if (isGood())
+   if (_sockfd > 0)
       ret = ::close(_sockfd);
 
    if (ret < 0)
    {
       _lastStatus = tools::funcLastError("close");
-
       _isGood = false;
-
    }
 
    _sockfd = -1;
@@ -115,10 +111,8 @@ socketHost tcpSocket::getLocalAddr()
 
    if (isConnected() && getsockname(_sockfd, (struct sockaddr *) &saddr, &saddr_len) != 0)
    {
-      
       _isGood = false;
-      _lastStatus = tools::funcLastError("getsockname");
-      
+      _lastStatus = tools::funcLastError("getsockname");  
    }
    else
    {
@@ -236,23 +230,6 @@ size_t tcpSocket::recvMsg(tcpMessage *msg)
    ptr = (char *) msg->payload();
    len = min(msg->maxlen(), _recvLength);
 
-   /*
-   fd_set readset;
-   struct timeval to = {0, 0};
-
-   FD_ZERO(&readset);
-   FD_SET(_sockfd, &readset);
-
-   int ret = select(_sockfd+1, &readset, NULL, NULL, NULLb);
-
-   if (ret <=0)
-   {
-      msg->setLength(0);
-      return 0;
-   }
-   */
-
-
    recv_total = recv(_sockfd, ptr, len, 0);
 
    if (recv_total < 0)
@@ -270,12 +247,19 @@ size_t tcpSocket::recvMsg(tcpMessage *msg)
    }
    
    recv_total = max(0, recv_total);
-
    msg->setLength(recv_total);
    
    return recv_total;
 }
 
+
+void tcpSocket::connectSocket(const int &fd)
+{
+   if (_isConnected || _sockfd > 0) close();
+
+   _sockfd = fd;
+   _isConnected = true;
+}
 
 int tcpSocket::getSocketOpts()
 {
@@ -283,10 +267,9 @@ int tcpSocket::getSocketOpts()
 
    copts = fcntl(_sockfd, F_GETFL);
 
-   if (copts < 0) {
-
+   if (copts < 0) 
+   {
       _isGood = false;
-
       _lastStatus = tools::funcLastError("fcntl");
    }
 
@@ -296,10 +279,9 @@ int tcpSocket::getSocketOpts()
 
 void tcpSocket::setSocketOpts(const int &opts)
 {
-   if (fcntl(_sockfd, F_SETFL, opts) < 0) {
-
+   if (fcntl(_sockfd, F_SETFL, opts) < 0) 
+   {
       _isGood = false;
-
       _lastStatus = tools::funcLastError("fcntl");
    }  
 }
@@ -312,7 +294,6 @@ void tcpSocket::enableBlocking(const bool &val)
       setSocketOpts(copts & ~O_NONBLOCK);
    else
       setSocketOpts(copts | O_NONBLOCK);
-
 }
 
 
@@ -320,18 +301,30 @@ void tcpSocket::enableDebug(const bool &val)
 {
    int optval = (val)? 1 : 0;
 
-   setsockopt(_sockfd, SOL_SOCKET, SO_DEBUG, &optval, sizeof(optval));
+   int ret = setsockopt(_sockfd, SOL_SOCKET, SO_DEBUG, &optval, sizeof(optval));
+
+   if (ret < 0)
+   {
+      _isGood = false;
+      _lastStatus = tools::funcLastError("enableDebug");
+   }
 }
 
 
-void tcpSocket::enableLinger(const bool &val)
+void tcpSocket::enableLinger(const bool &val, const int &secs)
 {
    struct linger optval;
 
    optval.l_onoff = (val)? 1 : 0;
-   optval.l_linger = _socketTimeout;
+   optval.l_linger = secs;
 
-   setsockopt(_sockfd, SOL_SOCKET, SO_LINGER, &optval, sizeof(optval));
+   int ret = setsockopt(_sockfd, SOL_SOCKET, SO_LINGER, &optval, sizeof(optval));
+
+   if (ret < 0)
+   {
+      _isGood = false;
+      _lastStatus = tools::funcLastError("enableLinger");
+   }
 }
 
 
@@ -339,7 +332,13 @@ void tcpSocket::enableReuseAddr(const bool &val)
 {
    int optval = (val)? 1 : 0;
 
-   setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+   int ret = setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+   if (ret < 0)
+   {
+      _isGood = false;
+      _lastStatus = tools::funcLastError("enableReuseAddr");
+   }
 }
 
 
@@ -347,7 +346,14 @@ void tcpSocket::enableKeepAlive(const bool &val)
 {
    int optval = (val)? 1 : 0;
 
-   setsockopt(_sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
+   int ret = setsockopt(_sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
+
+   if (ret < 0)
+   {
+      _isGood = false;
+      _lastStatus = tools::funcLastError("enableKeepAlive");
+   }
 }
+
 
 

@@ -8,8 +8,6 @@
 #include <unistd.h>
 #include "aux.h"
 
-#include <iostream>
-
 using namespace std;
 using namespace tools;
 
@@ -21,10 +19,10 @@ tcpServer::tcpServer(const uint16_t &port, const uint &backlog)
    _sock6 = -1;
    _isGood = true;
 
-
    bind("", port);
    listen(backlog);
 }
+
 
 tcpServer::tcpServer(const string &addr, const uint16_t &port, const uint &backlog)
 {
@@ -33,30 +31,26 @@ tcpServer::tcpServer(const string &addr, const uint16_t &port, const uint &backl
    _sock6 = -1;
    _isGood = true;
 
-
    bind(addr, port);
    listen(backlog);
 }
+
 
 tcpServer::~tcpServer()
 {
    close();
 }
 
+
 void tcpServer::close()
 {
    if (_sock4 != -1)
-   {
       ::close(_sock4);
-   }
-
 
    if (_sock6 != -1)
-   {
       ::close(_sock6);
-   }
-
 }
+
 
 tcpSocket *tcpServer::accept()
 {
@@ -65,13 +59,11 @@ tcpSocket *tcpServer::accept()
    tcpSocket *retsock = NULL;
    fd_set acset;
 
-   
    if (_sock4 == -1 && _sock6 == -1)
    {
       _lastStatus = "Accept with no socket created";
       return NULL;
    }
-
 
    FD_ZERO(&acset);
 
@@ -82,7 +74,6 @@ tcpSocket *tcpServer::accept()
       FD_SET(_sock6, &acset);
 
 
-
    retval = select(max(_sock4, _sock6) + 1, &acset, NULL, NULL, NULL);
 
    if (retval == -1)
@@ -90,7 +81,6 @@ tcpSocket *tcpServer::accept()
 	 if (errno != EINTR)
 	 {
 	    _lastStatus = tools::funcLastError("select");
-
 	    _isGood = false;
 	 }
    }
@@ -100,8 +90,6 @@ tcpSocket *tcpServer::accept()
    }
    else
    {
-
-    
       if (_sock4 != -1 && FD_ISSET(_sock4, &acset))
       {
 	 newfd = ::accept(_sock4, NULL, NULL);
@@ -117,11 +105,7 @@ tcpSocket *tcpServer::accept()
       }
       
       retsock = new tcpSocket();
-
-      retsock->_sockfd = newfd;
-      retsock->_isGood = true;
-      retsock->_isConnected = true;
-
+      retsock->connectSocket(newfd);
    }
 
    return retsock;
@@ -140,17 +124,16 @@ void tcpServer::bind(const string &addr, const uint16_t &port)
    bzero(&addr4, sizeof(addr4));
    bzero(&addr6, sizeof(addr6));
  
+   addr4.sin_family = AF_INET;
+   addr4.sin_port = htons(port);
+   addr6.sin6_family = AF_INET6;
+   addr6.sin6_port = htons(port);
 
 
    if (addr.empty())
    { 
       addr4.sin_addr.s_addr = INADDR_ANY;
-      addr4.sin_family = AF_INET;
-      addr4.sin_port = htons(port);
-
       addr6.sin6_addr = in6addr_any;
-      addr6.sin6_family = AF_INET6;
-      addr6.sin6_port = htons(port);
 
       has_ipv4 = true;
       has_ipv6 = true;
@@ -158,7 +141,7 @@ void tcpServer::bind(const string &addr, const uint16_t &port)
    else
    {
       
-      ret4 = inet_pton(AF_INET, addr.c_str(), &addr4);
+      ret4 = inet_pton(AF_INET, addr.c_str(), &(addr4.sin_addr));
 
       if (ret4 < 0)
       {
@@ -170,7 +153,7 @@ void tcpServer::bind(const string &addr, const uint16_t &port)
       }
 
 
-      ret6 = inet_pton(AF_INET6, addr.c_str(), &addr6);
+      ret6 = inet_pton(AF_INET6, addr.c_str(), &(addr6.sin6_addr));
       
       if (ret6 < 0)
       {
@@ -183,10 +166,9 @@ void tcpServer::bind(const string &addr, const uint16_t &port)
       
    }
   
-  
+
 
    // Create sockets and binds
-   
    if (has_ipv4)
    {
       _sock4 = socket(AF_INET, SOCK_STREAM, 0);
@@ -218,10 +200,16 @@ void tcpServer::bind(const string &addr, const uint16_t &port)
    {
       _sock6 = socket(AF_INET6, SOCK_STREAM, 0);
 
-      // r = setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on));
-
+      
       if (_sock6 != -1)
       {
+
+	 if (has_ipv4)
+	 {
+	    int on = 1;
+	    int r = setsockopt(_sock6, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on));
+	 }
+
 	 ret6 = ::bind(_sock6, (struct sockaddr *) &addr6, sizeof(addr6));
 
 	 if (ret6 < 0)
@@ -231,7 +219,6 @@ void tcpServer::bind(const string &addr, const uint16_t &port)
 	    _sock6 = -1;
 
 	    _lastStatus = tools::funcLastError("bind");
-
 	 }
 
       }
@@ -244,8 +231,6 @@ void tcpServer::bind(const string &addr, const uint16_t &port)
 
    }
    
-
-
 
    if(!has_ipv4 && !has_ipv6)
    {

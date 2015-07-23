@@ -21,6 +21,7 @@ namespace tools
 
       void setLength(const size_t &len) { _length = std::min(len, _maxlen); };
       void readString(const std::string &str);
+      std::string writeString() const;
 
      protected:
 
