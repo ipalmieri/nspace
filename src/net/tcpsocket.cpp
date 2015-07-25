@@ -41,7 +41,9 @@ void tcpSocket::connect(const std::string &hostname, const uint16_t &port)
 
    memset(&hints, 0, sizeof(struct addrinfo));
    hints.ai_family = AF_UNSPEC;
-   hints.ai_flags = (AI_V4MAPPED|AI_ADDRCONFIG);
+   // fix this: BSD compatibility check
+   //hints.ai_flags = (AI_V4MAPPED|AI_ADDRCONFIG);
+   hints.ai_flags = 0;
    hints.ai_socktype = SOCK_STREAM;
    hints.ai_protocol = 0;    
 
