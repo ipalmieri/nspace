@@ -10,6 +10,7 @@
 #include "singleton.h"
 #include "logger.h"
 #include "spool.h"
+#include "mnet.h"
 
 #include "afilter.h"
 #include "algebra.h"

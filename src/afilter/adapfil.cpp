@@ -50,12 +50,12 @@ void algoNLMS::updateWeights(const Complex &d)
 
 //====== Recursive Least Squares adaptive filter ======//
 algoRLS::algoRLS(const Real &lambda, const Real &eps, 
-		 firFilter *f) : firTrainer(f), _Pmat(f->size(), f->size())
+		 firFilter *f) : firTrainer(f), _P(f->size(), f->size())
 {
    _lambda = lambda;
    _eps = eps;
 
-   _Pmat = (1.0/_eps) * identity<Complex>(f->size());
+   _P = (1.0/_eps) * identity<Complex>(f->size());
 }
 
 algoRLS::~algoRLS()
@@ -70,14 +70,14 @@ void algoRLS::updateWeights(const Complex &d)
    //P(i) = [P(i-1) - (P(i-1).u(i)*.u(i).P(i-1)/lambda)/(1 + u(i).P(i-1)u(i)*/lambda)]
    
    cMatrixN u(_f->values);
-   Complex temp = _lambda + _f->values*(_Pmat*conjugate(_f->values));
+   Complex temp = _lambda + _f->values*(_P*conjugate(_f->values));
 
-   _Pmat = (_Pmat - ((_Pmat*conjugate(u))*(transpose(u)*_Pmat))/temp)/_lambda; 
+   _P = (_P - ((_P*conjugate(u))*(transpose(u)*_P))/temp)/_lambda; 
 
    //now, we update the weights
    Complex ei = d - _f->output();
 
-   _f->weights = _f->weights + _Pmat * conjugate(_f->values) * ei;
+   _f->weights = _f->weights + _P * conjugate(_f->values) * ei;
 }
 
 
