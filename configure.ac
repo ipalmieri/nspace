@@ -26,10 +26,10 @@ AC_MSG_RESULT([$debugit])
 
 if test x"$debugit" = x"yes"; then
     AC_DEFINE([DEBUG],[],[Debug Mode])
-    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -O0"
+    AM_CXXFLAGS="$AM_CXXFLAGS -g -Wall -O0 -DDEBUG"
 else
     AC_DEFINE([NDEBUG],[],[No-debug Mode])
-    AM_CXXFLAGS="$AM_CXXFLAGS -O3 -funroll-loops"
+    AM_CXXFLAGS="$AM_CXXFLAGS -O3 -funroll-loops -DNDEBUG"
 fi
  
 ##########################################################################
