@@ -209,11 +209,11 @@ kohonenCube::kohonenCube(const unsigned &ninputs,
    double ndepth = max(depth, 0.0);
 
    kposition tpos;
-   for(int k = 0; k < nz; k++)
+   for(uint k = 0; k < nz; k++)
    {
-      for(int j = ny - 1; j >= 0; j--)
+      for(uint j = ny - 1; j >= 0; j--)
       {
-	 for(int i = 0; i < nx; i++)
+	 for(uint i = 0; i < nx; i++)
 	 {
 	    tpos.x = (nx == 1)? 0.0 : nwidth * (((double)i / (double)(nx - 1)) - 0.5);
 	    tpos.y = (ny == 1)? 0.0 : nheight * (((double)j / (double)(ny - 1)) - 0.5);
