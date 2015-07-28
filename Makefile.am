@@ -25,7 +25,7 @@ libtools_adir = $(includedir)/tools
 libtools_a_HEADERS = 	\
 			include/tools.h \
 			include/adefs.h \
-			include/afilter.h \
+			include/sigpro.h \
 			include/algebra.h \
 			include/aux.h \
 			include/date.h \
@@ -35,8 +35,8 @@ libtools_a_HEADERS = 	\
 			include/singleton.h \
 			include/timeserie.h \
 			include/tree.h \
-			include/afilter/adapfil.h \
-			include/afilter/filter.h \
+			include/sigpro/adapfil.h \
+			include/sigpro/filter.h \
 			include/algebra/matrix3.h \
 			include/algebra/matrix4.h \
 			include/algebra/matrixn.h \
@@ -76,8 +76,8 @@ libtools_a_SOURCES =	\
 			src/tree/atree.cpp \
 			src/multimedia/csvtools.cpp \
 			src/logger.cpp \
-			src/afilter/filter.cpp \
-			src/afilter/adapfil.cpp \
+			src/sigpro/filter.cpp \
+			src/sigpro/adapfil.cpp \
 			src/algebra/matrixn.cpp \
 			src/algebra/vectorn.cpp \
 			src/algebra/transmatrix.cpp \
