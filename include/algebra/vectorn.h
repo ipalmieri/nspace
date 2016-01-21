@@ -7,7 +7,7 @@
 #include <cassert>
 #include "adefs.h"
 
-#define AL_MAX_VSIZE 1048576
+#define AL_MAX_VSIZE 104857600
 
 namespace tools
 {
@@ -21,38 +21,47 @@ namespace tools
       
       explicit VectorN(const unsigned &n, const T &value=0)
       {
+	 _vector = NULL;
+	 _size = 0;
+
 	 init(n);
 	 
-	 for (unsigned i = 0; i < _size; i++) _vector[i] = value;
+	 for (unsigned i = 0; i < _size; i++) 
+	    _vector[i] = value;
       } 
       
       VectorN(const VectorN<T> &vec)
       {
 	 init(vec._size);
 	 
-	 for (unsigned i = 0; i < _size; i++) _vector[i] = vec[i];
+	 for (unsigned i = 0; i < _size; i++) 
+	    _vector[i] = vec[i];
       }
 
-      ~VectorN() { free(_vector); }
+      virtual ~VectorN() 
+      { 
+	 if (_vector)
+	    free(_vector); 
+      }
       
       inline unsigned size() const { return _size; }
 
-      inline T &operator [](const unsigned &index) 
+      inline T &operator[](const unsigned &index) 
       {
 	 assert(index < _size);
-
 	 return _vector[index]; 
       }
       
-      inline T operator [](const unsigned &index) const 
+      inline T operator[](const unsigned &index) const 
       { 
 	 assert(index < _size);
 	 return _vector[index]; 
       }
 
-      VectorN<T> &operator =(const VectorN<T> &vec) 
+      VectorN<T> &operator=(const VectorN<T> &vec) 
       {
-	 assert(_size == vec.size());
+	 if (_size != vec.size())
+	    init(vec._size);
 
 	 for (unsigned i = 0; i < _size; i++)
 	     _vector[i] = vec[i];
@@ -60,7 +69,7 @@ namespace tools
 	 return (*this);
       }
       
-      VectorN<T> operator +(const VectorN<T> &vec) const
+      VectorN<T> operator+(const VectorN<T> &vec) const
       {
 	 VectorN<T> sum(_size);
 
@@ -72,7 +81,7 @@ namespace tools
 	 return sum;
       }
 
-      VectorN<T> operator -(const VectorN<T> &vec) const
+      VectorN<T> operator-(const VectorN<T> &vec) const
       {
 	 VectorN<T> sum(_size);
 
@@ -85,7 +94,7 @@ namespace tools
       }
 
       //dot product
-      T operator *(const VectorN<T> &vec) const
+      T operator*(const VectorN<T> &vec) const
       {
 	 T ret = (T) 0;
 
@@ -97,7 +106,7 @@ namespace tools
 	 return ret;
       }
 
-      VectorN<T> operator *(const T &scalar) const
+      VectorN<T> operator*(const T &scalar) const
       {
 	 VectorN<T> prod(_size);
 
@@ -107,12 +116,12 @@ namespace tools
 	 return prod;	
       }
       
-      friend VectorN<T> operator *(const T &scalar, const VectorN<T> &vec) 
+      friend VectorN<T> operator*(const T &scalar, const VectorN<T> &vec) 
       {
-	 return vec * scalar;
+	 return vec*scalar;
       }
 
-      VectorN<T> operator /(const T &scalar) const
+      VectorN<T> operator/(const T &scalar) const
       {
 	 VectorN<T> prod(_size);
 
@@ -123,12 +132,12 @@ namespace tools
       }
 
 
-      VectorN<T> operator +()
+      VectorN<T> operator+()
       {
 	 return *this;
       }
 
-      VectorN<T> operator -()
+      VectorN<T> operator-()
       {
 	 VectorN<T> ret(_size);
 
@@ -146,19 +155,24 @@ namespace tools
       
 
      protected: 
-      
-      
+
       void init(const unsigned &n)
       {
-	 _size = (unsigned) std::min((unsigned)AL_MAX_VSIZE, 
+	 unsigned nsize = (unsigned) std::min((unsigned)AL_MAX_VSIZE, 
 				     std::max((unsigned)0, n));
 	 
-	 _vector = (T *) malloc(_size*sizeof(T));
-      }
+	 T *tvec = (T *) realloc(_vector, nsize*sizeof(T));
 
+	 if (tvec) 
+	 {
+	    _vector = tvec;
+	    _size = nsize;
+	 }
+      } 
+
+    
       T *_vector;
       unsigned _size; //N elements
-
    };
 
 
@@ -169,6 +183,8 @@ namespace tools
    //length (norm) of the vector
    Real length(const rVectorN &vec); 
    Real length(const cVectorN &vec); 
+   inline Real norm(const rVectorN &vec) { return length(vec); }
+   inline Real norm(const cVectorN &vec) { return length(vec); }
    cVectorN conjugate(const cVectorN &vec);
    rVectorN normalize(const rVectorN &vec);
    cVectorN normalize(const cVectorN &vec);

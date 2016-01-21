@@ -1,15 +1,30 @@
 #ifndef __FILTER_H__
 #define __FILTER_H__
 
+#include "sigpro/sigvec.h"
 #include "algebra.h"
 
 namespace tools
 {
-   
+   ////////////////////////////////////////////////////////
+   /// filter base class
+   ////////////////////////////////////////////////////////
+   class signalFilter
+   {
+     public:
+      signalFilter();
+      virtual ~signalFilter();
+      
+      virtual void update() = 0;
+      virtual void setInput(const Complex &val) = 0;
+      virtual Complex getOutput() = 0;
+   };
+
+
    ////////////////////////////////////////////////////////
    /// FIR filter class
    ////////////////////////////////////////////////////////
-   class firFilter
+   class firFilter : public signalFilter
    {
      public:
 
@@ -18,7 +33,7 @@ namespace tools
 
       void update();
       void setInput(const Complex &val);
-      inline Complex output() { return _ouval; }
+      inline Complex getOutput() { return _ouval; }
       inline unsigned size() { return _length; } 
 
       cVectorN weights;
@@ -36,7 +51,7 @@ namespace tools
    ////////////////////////////////////////////////////////
    /// IIR filter class
    ////////////////////////////////////////////////////////
-   class iirFilter
+   class iirFilter : public signalFilter
    {
      public:
 
@@ -45,7 +60,7 @@ namespace tools
 
       void update();
       void setInput(const Complex &val) { _inval = val; }
-      inline Complex output() { return _ouValues[0]; }
+      inline Complex getOutput() { return _ouValues[0]; }
       inline unsigned inputSize() { return _inLength; }
       inline unsigned outputSize() { return _ouLength; }
       cVectorN &inValues() { return _inValues; }
@@ -63,6 +78,12 @@ namespace tools
       Complex _inval;
    };
 
+
+   ////////////////////////////////////////////////////////
+   /// filter function
+   ////////////////////////////////////////////////////////
+   signalVector filter(const signalVector &signal, signalFilter *filter);
+  
 }
 
 #endif //__FILTER_H__

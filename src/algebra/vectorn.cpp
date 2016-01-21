@@ -3,6 +3,7 @@
 using namespace tools;
 using namespace std;
 
+
 Real tools::length(const rVectorN &vec) 
 {
    Real ret = 0.0f;
