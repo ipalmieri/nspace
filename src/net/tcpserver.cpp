@@ -208,6 +208,9 @@ void tcpServer::bind(const string &addr, const uint16_t &port)
 	 {
 	    int on = 1;
 	    int r = setsockopt(_sock6, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on));
+
+	    if (r < 0)
+	       _lastStatus = tools::funcLastError("setsockopt");
 	 }
 
 	 ret6 = ::bind(_sock6, (struct sockaddr *) &addr6, sizeof(addr6));
