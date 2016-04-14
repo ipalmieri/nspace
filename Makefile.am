@@ -2,12 +2,9 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-# additional include pathes necessary to compile the C++ library
-AM_CPPFLAGS = \
-		-Iinclude
+#AM_CPPFLAGS= \
+#            -Iinclude 
 
-
-#AM_LDFLAGS = -ljpeg -lrt
 
 ###############################################################################
 # THE LIBRARIES TO BUILD
