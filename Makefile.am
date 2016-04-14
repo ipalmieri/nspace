@@ -1,3 +1,11 @@
+# Main Makefile.am
+
+#AM_CPPFLAGS= \
+#	     -I$(top_builddir)/modules/neural/include \
+#            -I$(top_builddir)/modules/advtec/include \
+#            -I$(top_builddir)/modules/tools/include
+
+
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
@@ -7,31 +15,18 @@ SUBDIRS = \
 	modules/tools 
 
 
-
 bin_PROGRAMS = nspace
 
+
 nspace_SOURCES = src/main.cpp 
-
-
-AM_CPPFLAGS = \
-	-Imodules/neural/include \
-	-Imodules/advtec/include \
-	-Imodules/tools/include 
-
-
-
-AM_CXXFLAGS = @AM_CXXFLAGS@ 
 
 
 nspace_LDADD = \
 		modules/neural/libneural.a \
 		modules/advtec/libadvtec.a \
 		modules/tools/libtools.a \
-		$(LIBOBJS)
-
-
-AM_LDFLAGS = -ljpeg -lrt 
-
+		$(RT_LIBS) \
+		$(JPEG_LIBS)
 
 
 #dist_noinst_SCRIPTS = autogen.sh

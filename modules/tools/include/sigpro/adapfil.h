@@ -1,7 +1,7 @@
 #ifndef __ADAPFIL_H__
 #define __ADAPFIL_H__
 
-#include "afilter/filter.h"
+#include "sigpro/filter.h"
 #include "algebra.h"
 
 namespace tools
