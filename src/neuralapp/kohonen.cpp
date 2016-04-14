@@ -209,6 +209,7 @@ kohonenCube::kohonenCube(const unsigned &ninputs,
    double ndepth = max(depth, 0.0);
 
    kposition tpos;
+
    for(uint k = 0; k < nz; k++)
    {
       for(uint j = ny - 1; j >= 0; j--)
