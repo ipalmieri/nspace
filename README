@@ -1,0 +1,5 @@
+
+- To build in OpenBSD, first source environment variables:
+
+. ./obsd_vars.sh
+

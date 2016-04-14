@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+
+#define ERROR_BUFSIZE 512
+
 //auxiliary functions and definitions
 
 namespace tools
@@ -30,7 +33,7 @@ namespace tools
 
    //Return srerror(errno) as string
    std::string lastError();
-   
+   std::string funcLastError(const std::string &funcname);
 
 }
 

@@ -1,6 +1,8 @@
 #ifndef __NEURAL_H__
 #define __NEURAL_H__
 
+#include "neuralapp/kneuron.h"
+#include "neuralapp/backprop.h"
 #include "neuralapp/gatrainer.h"
 #include "neuralapp/mlp.h"
 #include "neuralapp/kohonen.h"

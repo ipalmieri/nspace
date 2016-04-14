@@ -2,12 +2,9 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-# additional include pathes necessary to compile the C++ library
-AM_CPPFLAGS = \
-		-Iinclude
+#AM_CPPFLAGS= \
+#            -Iinclude 
 
-
-#AM_LDFLAGS = -ljpeg -lrt
 
 ###############################################################################
 # THE LIBRARIES TO BUILD
@@ -25,7 +22,7 @@ libtools_adir = $(includedir)/tools
 libtools_a_HEADERS = 	\
 			include/tools.h \
 			include/adefs.h \
-			include/afilter.h \
+			include/sigpro.h \
 			include/algebra.h \
 			include/aux.h \
 			include/date.h \
@@ -35,8 +32,8 @@ libtools_a_HEADERS = 	\
 			include/singleton.h \
 			include/timeserie.h \
 			include/tree.h \
-			include/afilter/adapfil.h \
-			include/afilter/filter.h \
+			include/sigpro/adapfil.h \
+			include/sigpro/filter.h \
 			include/algebra/matrix3.h \
 			include/algebra/matrix4.h \
 			include/algebra/matrixn.h \
@@ -55,8 +52,9 @@ libtools_a_HEADERS = 	\
 			include/timemark.h \
 			include/timepoint.h \
 			include/mnet.h \
-			include/net/msocket.h
-
+			include/net/tcpsocket.h \
+			include/net/tcpserver.h \
+			include/net/tcpmsg.h
 
 
 # the sources to add to the library and to add to the source distribution
@@ -75,15 +73,18 @@ libtools_a_SOURCES =	\
 			src/tree/atree.cpp \
 			src/multimedia/csvtools.cpp \
 			src/logger.cpp \
-			src/afilter/filter.cpp \
-			src/afilter/adapfil.cpp \
+			src/sigpro/filter.cpp \
+			src/sigpro/adapfil.cpp \
 			src/algebra/matrixn.cpp \
 			src/algebra/vectorn.cpp \
 			src/algebra/transmatrix.cpp \
 			src/multimedia/imagemap.cpp \
 			src/timemark.cpp \
 			src/timepoint.cpp \
-			src/net/msocket.cpp
+			src/net/tcpsocket.cpp \
+			src/net/tcpserver.cpp \
+			src/net/tcpmsg.cpp
+
 
 
 ###############################################################################

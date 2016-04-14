@@ -103,11 +103,24 @@ string tools::istr(const int &x)
     return temp.str();
 }
 
-// return last error
-// fix this: should use strerror_r to be thread safe
+// return string with strerror(errno)
 string tools::lastError() 
 {
-   char *e = strerror(errno);
+   char e[ERROR_BUFSIZE];
 
-   return e ? e : "NULL";
+   // for POSIX complient version
+   // compile with-D_XOPEN_SOURCE=600 or -D_POSIX_C_SOURCE=200112L
+   // without -D_GNU_SOURCE is needed 
+   if (strerror_r(errno, e, ERROR_BUFSIZE) != 0)
+      return string("Can't provide error: check strerror_r()");
+   return string(e);
+   
+   //return string(strerror_r(errno, e, ERROR_BUFSIZE));
 }
+
+// return formatted error string
+string tools::funcLastError(const string &funcname)
+{
+   return ((funcname.length() > 0)? funcname + "(): " : "") + lastError();
+}
+
