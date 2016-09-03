@@ -2,8 +2,8 @@
 #define __MNET_H__
 
 
-#include "net/tcpsocket.h"
-#include "net/tcpserver.h"
-
+#include "mnet/tcpsocket.h"
+#include "mnet/tcpserver.h"
+#include "mnet/tcpmsg.h"
 
 #endif //__MNET_H__

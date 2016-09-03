@@ -3,40 +3,40 @@
 
 #include <stdint.h>
 
-namespace tools
+namespace tools {
+//////////////////////////////////////////////
+/// Steady clock mark in time for measurement
+//////////////////////////////////////////////
+class timeMark
 {
-   //////////////////////////////////////////////
-   /// Steady clock mark in time for measurement
-   //////////////////////////////////////////////
-   class timeMark
-   {
 
-     public:
+ public:
 
-      //timeMark() { (*this) = get(); }
-      timeMark() {}
-      ~timeMark() {}
-    
-      static timeMark get();
-      
-      double elapsedSeconds(const timeMark &mk);
+  //timeMark() { (*this) = get(); }
+  timeMark() {}
+  ~timeMark() {}
 
-      bool operator<(const timeMark &tm) const;
-      bool operator>(const timeMark &tm) const;
-      bool operator==(const timeMark &tm) const;
-      bool operator!=(const timeMark &tm) const;
-      bool operator<=(const timeMark &tm) const;
-      bool operator>=(const timeMark &tm) const;
+  static timeMark get();
+
+  double elapsedSeconds(const timeMark& mk);
+
+  bool operator<(const timeMark& tm) const;
+  bool operator>(const timeMark& tm) const;
+  bool operator==(const timeMark& tm) const;
+  bool operator!=(const timeMark& tm) const;
+  bool operator<=(const timeMark& tm) const;
+  bool operator>=(const timeMark& tm) const;
 
 
-     protected:
+ protected:
 
-      //timeMark() {}
-      timeMark(const uint64_t &secs, const uint64_t &nans) : _secs(secs), _nans(nans) {} 
+  //timeMark() {}
+  timeMark(const uint64_t& secs, const uint64_t& nans) : _secs(secs),
+    _nans(nans) {}
 
-      uint64_t _secs; ///< seconds since epoch
-      uint64_t _nans; ///< nanoseconds on top of the seconds
-   };
+  uint64_t _secs; ///< seconds since epoch
+  uint64_t _nans; ///< nanoseconds on top of the seconds
+};
 }
 
 #endif //__TIMEMARK_H__

@@ -4,294 +4,379 @@
 #include <math.h>
 #include <tools.h>
 #include <neural.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <list>
 
-#define _WIDTH 40.0
-#define _HEIGHT 40.0
-#define _NX 40
-#define _NY 40
-#define _RADIUS 1.5
-#define _MAXITER 100
-#define _INFILE "data/neural/kmap/sorting_arx_n.out"
+#define _LOGFILE "/tmp/engine.log"
+#define _PARFILE "/data/params.conf"
 
 using namespace std;
 using namespace tools;
 using namespace neural;
 
-typedef struct
+/////////////////////////////////////////////////////////////////
+// Data structures
+/////////////////////////////////////////////////////////////////
+
+typedef struct {
+  tools::Real swidth;
+  tools::Real sheight;
+  uint nx;
+  uint ny;
+  float radius;
+  uint maxiter;
+  bool border;
+  string datafile;
+  string ansfile;
+  string outfile;
+  string bmuimg;
+  string ptsimg;
+} parstruct;
+
+typedef struct {
+  parstruct* params;
+  seriesArray* data;
+  vector<std::string>* answer;
+  kohonenCube* som;
+  netManager* mng;
+  map<uint, kneuron*>* klist;
+  std::string name;
+} simulation;
+
+
+/////////////////////////////////////////////////////////////////
+// Helper functions
+/////////////////////////////////////////////////////////////////
+void printArray(const seriesArray& arr)
 {
-   uint target;
-   nsignal *params;
-   uint pcount;
-} istruct;
+  for (uint i = 0; i < arr.sampleCount(); i++) {
 
-vector<istruct> loadfile(string filename)
-{
-   vector<istruct> ret;
-   istruct tmpdata;
+    for (uint j = 0; j < arr[i].size(); j++) {
 
-   csvReader filedata(filename, ",");
+      cout << arr[i][j] << " ";
+    }
 
-   cout << "reading file " << filename << endl;
-   
-   filedata.openFile();
-
-   while (filedata.isValid())
-   {
-      vector<string> line = filedata.getLine();
- 
-      if (line.size() > 0)
-      {
-	 tmpdata.target = atoi(line[0].c_str());
-	 tmpdata.pcount = line.size() - 1;
-	 tmpdata.params = (nsignal *) calloc(tmpdata.pcount, sizeof(nsignal));
- 
-	 for (uint i = 0; i < tmpdata.pcount; i++)
-	 {
-	    tmpdata.params[i] = atof(line[i+1].c_str());
-	 }
-      
-	 ret.push_back(tmpdata);
-      }
-   } 
-   
-   cout << ret.size() << " lines read." << endl;
-
-   return ret;
+    cout << endl;
+  }
 }
 
+/////////////////////////////////////////////////////////////////
+// Load simulation parameters to structure
+/////////////////////////////////////////////////////////////////
+void loadParams(simulation* context)
+{
+  parstruct* params = new parstruct;
+
+  cout << "Loading parameters..." << endl;
+
+  std::ifstream infile(_PARFILE);
+
+
+  infile >> params->swidth;
+  infile >> params->sheight;
+  infile >> params->nx;
+  infile >> params->ny;
+  infile >> params->radius;
+  infile >> params->maxiter;
+
+  uint bord = 0;
+  infile >> bord;
+  params->border = (bord > 0);
+
+  infile >> params->datafile;
+  infile >> params->ansfile;
+  infile >> params->outfile;
+  infile >> params->bmuimg;
+  infile >> params->ptsimg;
+
+  /*
+  cout << params->swidth << endl;
+  cout << params->sheight << endl;
+  cout << params->nx << endl;
+  cout << params->ny << endl;
+  cout << params->radius << endl;
+  cout << params->maxiter << endl;
+  cout << params->border << endl;
+
+  cout << params->datafile << endl;
+  cout << params->ansfile << endl;
+  cout << params->outfile << endl;
+  cout << params->bmuimg << endl;
+  cout << params->ptsimg << endl;
+  */
+
+  context->params = params;
+}
+
+
+/////////////////////////////////////////////////////////////////
+// Read data input and create SOM
+/////////////////////////////////////////////////////////////////
+void createANN(simulation* context)
+{
+  parstruct* params = context->params;
+
+  cout << "Loading input files..." << endl;
+
+  seriesArray* tdata = new seriesArray(loadSignalCSV<signalSample>
+                                       (params->datafile, ','));
+  vector< vector<string> > csvans = readCSV(params->ansfile, ",");
+  vector<string>* tanswer = new vector<string>;
+
+  for (uint i = 0; i < csvans.size(); i++) {
+    tanswer->push_back(csvans[i][0]);
+  }
+
+
+  cout << "Creating ANN..." << endl;
+
+  //printArray(par_arr);
+  uint pcount = tdata->signalCount();
+
+  kohonenCube* kmap = kreateMap(pcount, params->nx, params->ny, params->swidth,
+                                params->sheight);
+  netManager* mng = new netManager(kmap);
+
+  //mng->printNeurons();
+  //mng->printSynapses();
+
+  context->data = tdata;
+  context->answer = tanswer;
+  context->som = kmap;
+  context->mng = mng;
+
+  cout << "Created ANN with " << kmap->neuronCount() << " neurons." << endl;
+}
+
+/////////////////////////////////////////////////////////////////
+// Train SOM
+/////////////////////////////////////////////////////////////////
+void trainANN(simulation* context)
+{
+  parstruct* params = context->params;
+  seriesArray* tdata = context->data;
+  kohonenCube* kmap = context->som;
+
+  cout << "Training ANN.." << endl;
+
+  kTrainer* boss = new kTrainer(kmap, params->radius, (double)params->maxiter);
+  boss->borderMode = params->border;
+
+  unsigned tind;
+  for (unsigned i = 0; i < params->maxiter; i++) {
+    tind = (unsigned) (double)tdata->sampleCount()*(double)rand()/RAND_MAX;
+
+    kmap->setInput((*tdata)[tind]);
+    boss->fitCurrentInput();
+
+    cout << "\r" << 100*(i + 1)/params->maxiter << "% complete.";
+  }
+  cout << endl;
+
+  cout << "ANN trained with " << params->maxiter << " samples." << endl;
+
+  delete boss;
+}
+
+/////////////////////////////////////////////////////////////////
+// Match points in SOM
+/////////////////////////////////////////////////////////////////
+void matchData(simulation* context)
+{
+  kohonenCube* kmap = context->som;
+  seriesArray* tdata = context->data;
+  parstruct* params = context->params;
+  map<uint, kneuron*>* klist = new map<uint, kneuron*>;
+  context->klist = klist;
+
+  double qError = 0.0;
+  double tError = 0.0;
+
+  cout << "Finding BMUs and calculating errors..." << endl;
+
+  //find BMUs
+  for (uint i = 0; i < tdata->sampleCount(); i++) {
+    kmap->setInput((*tdata)[i]);
+    kmap->updateAll();
+
+    kneuron* knr = kmap->inputBMU();
+
+    (*klist)[i] = knr;
+
+    qError += kmap->quantizationError();
+    tError += kmap->topographicError(params->swidth / (params->nx - 1) + 0.01);
+
+    cout << "\r" << 100*(i + 1)/tdata->sampleCount() << "% complete.";
+
+  }
+  cout << endl;
+
+  qError /= tdata->sampleCount();
+  tError /= tdata->sampleCount();
+
+  cout << "Errors ---> Q: " << setw(5) << setiosflags(ios::fixed);
+  cout << setprecision(4) << qError;
+  cout << " T: " << tError << endl;
+
+}
+
+/////////////////////////////////////////////////////////////////
+// Print results and save output
+/////////////////////////////////////////////////////////////////
+void printResults(simulation* context)
+{
+  kohonenCube* kmap = context->som;
+  parstruct* params = context->params;
+  seriesArray* tdata = context->data;
+  vector<string>* tanswer = context->answer;
+  map<uint, kneuron*>* klist = context->klist;
+
+  cout << "Saving results..." << endl;
+
+  kMan kprin(kmap);
+
+  kmap->updateAll();
+  kmap->updateAll();
+
+  kprin.saveUMatrixImage(params->bmuimg,
+                         (double) params->swidth /
+                         (double) (params->nx-1) + 0.01);
+  
+  //kprin.printUMatrix(_WIDTH/(_NX-1) + 0.01);
+
+
+  //kprin.printKmap();
+  //mng->printNeurons();
+  //mng->printSynapses();
+
+
+  //print neuron BMUs
+  imageMap pic(kmap->xNeurons(), kmap->yNeurons(), 3);
+
+  for (uint i = 0; i < pic.linearSize(); i++) {
+    pic[i] = (imageMap::pixel) 255;
+  }
+
+  //uint posx = 0;
+  //uint posy = 0;
+  //uint idx = pic.width()*pic.channels()* + posx*pic.channels();
+  //pic[idx] = (imageMap::pixel) 0;
+  //pic[idx] = (imageMap::pixel) 0;
+  //pic[idx] = (imageMap::pixel) 0;
+
+
+  uint color_table[4][3] = { {0, 0, 255},
+                             {0, 255, 0},
+                             {0, 0, 0},
+                             {255, 0, 0} };
+  
+
+  csvWriter outcsv(params->outfile, ',');
+
+  for (uint i = 0; i < tdata->sampleCount(); i++) {
+    kneuron* nr = (*klist)[i];
+
+    uint nrid = stoi((*tanswer)[i]);
+    uint* color = color_table[nrid - 1];
+
+    double posxd = (nr->positionX() + kmap->width()*0.5)/kmap->width();
+    double posyd = (nr->positionY() + kmap->height()*0.5)/kmap->height();
+    uint posx = (uint) ((double) (pic.width() - 1)*posxd);
+    uint posy = (uint) ((double) (pic.height() - 1)*(1.0 - posyd));
+
+    uint idx = (unsigned) (pic.width()*pic.channels()*posy + posx*pic.channels());
+
+    //cout << idx << " -> " << posx << "," << posy << " ---  ";
+    //cout << pic.width() << " " << pic.height() << " ";
+    //cout << nr->positionX() << " " << nr->positionY() << endl;
+    //cout << "color: " << color[0] << " " << color[1] << " " << color[2] << endl;
+
+    pic[idx+0] = (imageMap::pixel) color[0];
+    pic[idx+1] = (imageMap::pixel) color[1];
+    pic[idx+2] = (imageMap::pixel) color[2];
+
+
+    vector<string> strpos;
+    std::ostringstream sx, sy;
+
+    sx << nr->positionX();
+    sy << nr->positionY();
+
+    strpos.push_back(sx.str());
+    strpos.push_back(sy.str());
+
+    outcsv.writeLine(strpos);
+
+  }
+
+  //cout << pic.width() << " " << pic.height() << " " << pic.channels() << endl;
+
+  writeJPEG(params->ptsimg.c_str(), pic);
+
+}
+
+/////////////////////////////////////////////////////////////////
+// Cleanup function
+/////////////////////////////////////////////////////////////////
+void cleanup(simulation* context)
+{
+  if (context->params) {
+    delete context->params;
+  }
+  if (context->data) {
+    delete context->data;
+  }
+  if (context->answer) {
+    delete context->answer;
+  }
+  if (context->som) {
+    delete context->som;
+  }
+  if (context->mng) {
+    delete context->mng;
+  }
+  if (context->klist) {
+    delete context->klist;
+  }
+
+  context->params = NULL;
+  context->data = NULL;
+  context->answer = NULL;
+  context->som = NULL;
+  context->mng = NULL;
+  context->klist = NULL;
+}
+
+
+/////////////////////////////////////////////////////////////////
+// Simulation process
+/////////////////////////////////////////////////////////////////
+void simulate()
+{
+  simulation context;
+
+  loadParams(&context);
+
+  createANN(&context);
+
+  trainANN(&context);
+
+  matchData(&context);
+
+  printResults(&context);
+
+  cleanup(&context);
+}
+
+/////////////////////////////////////////////////////////////////
+// Main func
+/////////////////////////////////////////////////////////////////
 int main()
 {
 
-   string infile = _INFILE;
-  
-   vector<istruct> tdata = loadfile(infile);
-   if (tdata.size() <= 0) exit(1);
+  logger::startLog(_LOGFILE);
 
-   /*
-   for (uint i = 0; i < tdata.size(); i++)
-   {
-      cout << tdata[i].target << " ";
-      
-      for (uint j = 0; j < tdata[i].pcount; j++)
-      {
-	 cout << fixed << setprecision(6) << setw(9) << tdata[i].params[j] << " "; 
-      }
-      cout << endl;
-   }
-   */
+  simulate();
 
-
-   unsigned nx = _NX;
-   unsigned ny = _NY;
-   unsigned maxiter = _MAXITER;
-   double radius = _RADIUS;
-
-   uint pcount = tdata[0].pcount;
-   kohonenCube *kmap = kreateMap(pcount, nx, ny, _WIDTH, _HEIGHT);
-
-   netManager *mng = new netManager(kmap);
-
-   cout << "created ANN with " << kmap->neuronCount() << " neurons." << endl;
-   
-   //mng->printNeurons();
-   //mng->printSynapses();
-
-   
-   kTrainer *boss = new kTrainer(kmap, radius, (double)maxiter);
-   
-
-   //boss->borderMode = true;
-
-   
-   unsigned tind;
-   for (unsigned i = 0; i < maxiter; i++)
-   {
-      vector<nsignal> vecinput;
-      
-      tind = (unsigned) (double)tdata.size()*(double)rand()/RAND_MAX;
-     
-      //cout << "index: " << tind << endl;
-
-      for (uint j = 0; j < tdata[tind].pcount; j++)
-	 vecinput.push_back(tdata[tind].params[j]);
-
-      
-      kmap->setInput(vecinput);
-      boss->fitCurrentInput();
-
-      cout << "\r" << 100*(i+1)/maxiter << "% complete.";
-   }
-   cout << endl;
-
-   cout << "ANN trained with " << maxiter << " samples.";
-   cout << " Let's run data again over it." << endl;
-
-   
-   double qError = 0.0;
-   double tError = 0.0;
-
-   //find BMUs   
-   map<uint, kneuron *> klist;
-   for (uint i = 0; i < tdata.size(); i++)
-   {
-      vector<nsignal> vecinput;
-      
-      for (uint j = 0; j < tdata[i].pcount; j++)
-	 vecinput.push_back(tdata[i].params[j]);
-
-      kmap->setInput(vecinput);
-      kmap->updateAll();
-  
-      kneuron *knr = kmap->inputBMU();
-
-      klist[i] = knr;
-      
-      qError += kmap->quantizationError();
-      tError += kmap->topographicError(_WIDTH/(_NX-1) + 0.01);
-        
-   }
-
-   qError /= tdata.size();
-   tError /= tdata.size();
-
-   cout << "Errors ---> Q: " << setw(5) << setiosflags(ios::fixed);
-   cout << setprecision(4) << qError;
-   cout << " T: " << tError << endl;
-
-   
-   //find distances
-   for (uint i = 0; i < tdata.size(); i++)
-   {
-      map<uint, double> dlist;
-      list<uint> olist;
-
-      //cout << "CN: " << setw(5) << i << " (";
-      //cout << tdata[i].target << ") --> ";
-
-      for (uint j = 0; j < tdata.size(); j++)
-      {
-	 if (i != j)
-	 {
-	    kneuron *me = klist[i];
-	    kneuron *you = klist[j];
-
-	    double dist = neural::kdistance(me->getPosition(), you->getPosition());
-	    
-	    list<uint>::iterator it = olist.begin();
-	    while (it != olist.end() && dlist[(*it)] < dist) ++it;
-
-	    olist.insert(it, j);
-
-	    dlist[j] = dist;	    
-
-	 }
-      }
-      
-      /*
-      unsigned ind = 0;
-      for (list<uint>::iterator it = olist.begin(); it != olist.end(); ++it)
-      {
-	 cout << setw(5) << (*it);
-	 cout << " ";
-	 cout << "(";
-	 cout << setw(2) << setprecision(2) << dlist[(*it)];
-	 cout << ")  ";
-	 cout << tdata[(*it)].target;
-	 cout << " ";
-	 
-	 if (ind == 4) break;
-	 ind++;
-      }
-
-      kposition pos = klist[i]->getPosition();
-      cout << "[ " << setw(2) << setprecision(2) << pos.x << " ";
-      cout << setw(2) << setprecision(2) << pos.y << " ";
-      cout << setw(2) << setprecision(2) << pos.z << " ]";
-
-      cout << endl;
-      */
-   }
-
-   
-
-   kMan kprin(kmap);
-
-   kmap->updateAll();
-   kmap->updateAll();
-   
-   kprin.saveUMatrixImage("data/sorting.jpeg", _WIDTH/(_NX-1) + 0.01);
-   //kprin.printUMatrix(_WIDTH/(_NX-1) + 0.01);
-
-
-   //kprin.printKmap();
-   //mng->printNeurons();
-   //mng->printSynapses();
-
-   
-   //print neuron BMUs
-   imageMap pic(kmap->xNeurons(), kmap->yNeurons(), 3);
-   imageMap pic1(kmap->xNeurons(), kmap->yNeurons(), 3);
-
-   for (uint i = 0; i < pic.linearSize(); i++) {
-      pic[i] = (imageMap::pixel) 255;
-      pic1[i] = (imageMap::pixel) 255; 
-   }
-
-   //uint posx = 0;
-   //uint posy = 0;
-   //uint idx = pic.width()*pic.channels()* + posx*pic.channels();
-   //pic[idx] = (imageMap::pixel) 0;
-   //pic[idx] = (imageMap::pixel) 0;
-   //pic[idx] = (imageMap::pixel) 0;
-
-
-   uint colorlst[4][3] = {{0, 0, 0},
-			   {255, 0, 0},
-			   {0, 255, 0},
-			   {0, 0, 255}};
-      
-
-   for (uint i = 0; i < tdata.size(); i++)
-   {
-      kneuron *nr = klist[i];
-      
-      double posxd = (nr->positionX() + kmap->width()*0.5)/kmap->width();
-      double posyd = (nr->positionY() + kmap->height()*0.5)/kmap->height();
-      uint posx = (uint) ((double) (pic.width() - 1)*posxd);
-      uint posy = (uint) ((double) (pic.height() - 1)*(1.0 - posyd));
-      
-      uint idx = (unsigned) (pic.width()*pic.channels()*posy + posx*pic.channels());
-
-      //cout << idx << " -> " << posx << "," << posy << " ---  ";
-      //cout << pic.width() << " " << pic.height() << " ";
-      //cout << nr->positionX() << " " << nr->positionY() << endl;
-
-      uint color_idx = tdata[i].target % 4;
-
-      if (tdata[i].target != 0) {
-	 pic1[idx+0] = (imageMap::pixel) colorlst[color_idx][0];
-	 pic1[idx+1] = (imageMap::pixel) colorlst[color_idx][1];
-	 pic1[idx+2] = (imageMap::pixel) colorlst[color_idx][2]; 
-      }
-      
-      pic[idx+0] = (imageMap::pixel) colorlst[color_idx][0];
-      pic[idx+1] = (imageMap::pixel) colorlst[color_idx][1];
-      pic[idx+2] = (imageMap::pixel) colorlst[color_idx][2];
-
-   }
-   
-   //cout << pic.width() << " " << pic.height() << " " << pic.channels() << endl;
-
-   writeJPEG("data/sorting_neurons.jpeg", pic);
-   writeJPEG("data/sorting_targets.jpeg", pic1);
-
-   delete boss;
-   delete mng;
-   delete kmap;
-
-
-
-   return 0;
+  return 0;
 }

@@ -4,46 +4,55 @@ using namespace tools;
 using namespace std;
 
 
-Real tools::length(const rVectorN &vec) 
+Real tools::length(const rvectorN& vec)
 {
-   Real ret = 0.0f;
+  Real ret = 0.0f;
 
-   for (unsigned i = 0; i < vec.size(); i++)
-      ret += vec[i]*vec[i];
+  for (unsigned i = 0; i < vec.size(); i++) {
+    ret += vec[i]*vec[i];
+  }
 
-   return sqrt(ret);
+  return sqrt(ret);
 }
 
-Real tools::length(const cVectorN &vec) 
+Real tools::length(const cvectorN& vec)
 {
-   Real ret = 0.0f;
+  Real ret = 0.0f;
 
-   for (unsigned i = 0; i < vec.size(); i++)
-      ret += norm(vec[i]);
-      
-   return sqrt(ret);
+  for (unsigned i = 0; i < vec.size(); i++) {
+    ret += norm(vec[i]);
+  }
+
+  return sqrt(ret);
 }
 
-cVectorN tools::conjugate(const cVectorN &vec)
+cvectorN tools::conjugate(const cvectorN& vec)
 {
-   cVectorN ret(vec.size());
+  cvectorN ret(vec.size());
 
-   for (unsigned i = 0; i < ret.size(); i++)
-      ret[i] = conj(vec[i]);
-   
-   return ret;
+  for (unsigned i = 0; i < ret.size(); i++) {
+    ret[i] = conj(vec[i]);
+  }
+
+  return ret;
 }
 
-rVectorN tools::normalize(const rVectorN &vec)
+rvectorN tools::conjugate(const rvectorN& vec)
 {
-   Real len = length(vec);
-
-   return (len > 0.0)? vec/len : vec;
+  rvectorN ret = vec;
+  return ret;
 }
 
-cVectorN tools::normalize(const cVectorN &vec)
+rvectorN tools::normalize(const rvectorN& vec)
 {
-   Real len = length(vec);
+  Real len = length(vec);
 
-   return (len > 0.0)? vec/len : vec;
+  return (len > 0.0)? vec/len : vec;
+}
+
+cvectorN tools::normalize(const cvectorN& vec)
+{
+  Real len = length(vec);
+
+  return (len > 0.0)? vec/len : vec;
 }

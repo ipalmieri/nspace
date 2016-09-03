@@ -5,28 +5,30 @@
 #include <vector>
 #include <map>
 
-namespace tools
+namespace tools {
+class tnode
 {
-   class tnode
-   {
-     public:
-      typedef std::vector<tnode *> tnodeVector;
+ public:
+  typedef std::vector<tnode*> tnodeVector;
 
-      tnode(tnode *parent = NULL);
-      virtual ~tnode();
+  tnode(tnode* parent = NULL);
+  virtual ~tnode();
 
-      void addChild(tnode *child);
-      void removeChild(tnode *child);
-      void setParent(tnode *parent);
-      
-      tnodeVector children() { return _children; }
+  void addChild(tnode* child);
+  void removeChild(tnode* child);
+  void setParent(tnode* parent);
 
-     protected:
+  tnodeVector children()
+  {
+    return _children;
+  }
 
-      tnodeVector _children;
-      tnode *_parent;
-       
-   };
+ protected:
+
+  tnodeVector _children;
+  tnode* _parent;
+
+};
 
 }
 

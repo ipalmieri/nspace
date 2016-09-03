@@ -5,27 +5,26 @@
 #include "neuralnet.h"
 #include "neuralapp/kohonen.h"
 
-namespace neural
+namespace neural {
+
+class netManager
 {
+ public:
+  netManager(neuralNet* nrnet);
+  ~netManager();
 
-   class netManager
-   {
-     public:
-      netManager(neuralNet *nrnet);
-      ~netManager();
+  void saveFile(const std::string& filename);
+  void loadFile(const std::string& filename);
 
-      void saveFile(const std::string &filename);
-      void loadFile(const std::string &filename);
+  void printNeurons();
+  void printSynapses();
 
-      void printNeurons();
-      void printSynapses();
+ protected:
+  neuralNet* _neuralnet;
 
-     protected:
-      neuralNet *_neuralnet;
+ private:
 
-     private:
-    
-   };
+};
 
 
 }

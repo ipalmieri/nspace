@@ -4,161 +4,144 @@
 using namespace std;
 using namespace tools;
 
-const Matrix3 Matrix3::ZERO(0, 0, 0,
-			    0, 0, 0,
-			    0, 0, 0);
+const matrix3 matrix3::ZERO(0, 0, 0,
+                            0, 0, 0,
+                            0, 0, 0);
 
-const Matrix3 Matrix3::IDENTITY(1, 0, 0,
-				0, 1, 0,
-				0, 0, 1);
+const matrix3 matrix3::IDENTITY(1, 0, 0,
+                                0, 1, 0,
+                                0, 0, 1);
 
-Matrix3 Matrix3::operator+(const Matrix3 &mat) const
+matrix3 matrix3::operator+(const matrix3& mat) const
 {
-   Matrix3 sum;
+  matrix3 sum;
 
-   for (unsigned i = 0; i < 3; i++)
-   {
-      for (unsigned j = 0; j < 3; j++)
-	 sum[i][j] = _matrix[i][j] + mat[i][j];
-   }
-				
-   return sum;
-}	
+  for (unsigned i = 0; i < 3; i++) {
+    for (unsigned j = 0; j < 3; j++) {
+      sum[i][j] = _matrix[i][j] + mat[i][j];
+    }
+  }
 
-Matrix3 Matrix3::operator-(const Matrix3 &mat) const
-{
-   Matrix3 diff;
-
-   for (unsigned i = 0; i < 3; i++)
-   {
-      for (unsigned j = 0; j < 3; j++)
-	 diff[i][j] = _matrix[i][j] - mat[i][j];
-   }
-
-   return diff;
+  return sum;
 }
 
-Matrix3 Matrix3::operator*(const Matrix3 &mat) const
+matrix3 matrix3::operator-(const matrix3& mat) const
 {
-   Matrix3 prod;
+  matrix3 diff;
 
-   for (unsigned i = 0; i < 3; i++)
-   {
-      for (unsigned j = 0; j < 3; j++)
-      {
-	 prod[i][j] = 0.0;
+  for (unsigned i = 0; i < 3; i++) {
+    for (unsigned j = 0; j < 3; j++) {
+      diff[i][j] = _matrix[i][j] - mat[i][j];
+    }
+  }
 
-	 for (unsigned k = 0; k < 3; k++)
-	    prod[i][j] += _matrix[i][k]*mat[k][j];
+  return diff;
+}
 
+matrix3 matrix3::operator*(const matrix3& mat) const
+{
+  matrix3 prod;
+
+  for (unsigned i = 0; i < 3; i++) {
+    for (unsigned j = 0; j < 3; j++) {
+      prod[i][j] = 0.0;
+
+      for (unsigned k = 0; k < 3; k++) {
+        prod[i][j] += _matrix[i][k]*mat[k][j];
       }
-   }
 
-   return prod;
+    }
+  }
+
+  return prod;
 }
 
-Matrix3 Matrix3::operator*(const Real &scalar) const
+matrix3 matrix3::operator*(const Real& scalar) const
 {
-   Matrix3 prod;
+  matrix3 prod;
 
-   for (unsigned i = 0; i < 3; i++)
-   {
-      for (unsigned j = 0; j < 3; j++)
-	 prod[i][j] = _matrix[i][j]*scalar;
-   }
-   return prod;	
+  for (unsigned i = 0; i < 3; i++) {
+    for (unsigned j = 0; j < 3; j++) {
+      prod[i][j] = _matrix[i][j]*scalar;
+    }
+  }
+  return prod;
 }
 
-Matrix3 tools::operator*(const Real &scalar, const Matrix3 &mat)
+vector3 matrix3::operator*(const vector3&  vec) const
 {
-   Matrix3 prod;
+  vector3 ret;
 
-   for (unsigned i = 0; i < 3; i++)
-   {
-      for (unsigned j = 0; j < 3; j++)
-	 prod[i][j] = mat[i][j]*scalar;
-   }
-   return prod;
+  ret[0] = vec[0]*_matrix[0][0] + vec[1]*_matrix[0][1] + vec[2]*_matrix[0][2];
+  ret[1] = vec[0]*_matrix[1][0] + vec[1]*_matrix[1][1] + vec[2]*_matrix[1][2];
+  ret[2] = vec[0]*_matrix[2][0] + vec[1]*_matrix[2][1] + vec[2]*_matrix[2][2];
+
+  return ret;
 }
 
-Vector3 Matrix3::operator*(const Vector3 &vec) const
+matrix3 tools::operator*(const Real& scalar, const matrix3& mat)
 {
-   Vector3 ret;
-
-   ret[0] = _matrix[0][0]*vec[0] + _matrix[0][1]*vec[1] + _matrix[0][2]*vec[2];
-   ret[1] = _matrix[1][0]*vec[0] + _matrix[1][1]*vec[1] + _matrix[1][2]*vec[2];
-   ret[2] = _matrix[2][0]*vec[0] + _matrix[2][1]*vec[1] + _matrix[2][2]*vec[2]; 
-
-   return ret;
+  return mat*scalar;
 }
 
-Vector3 tools::operator*(const Vector3 &vec, const Matrix3 &mat)
+matrix3 matrix3::transpose() const
 {
-   Vector3 ret;
+  matrix3 mtrans;
 
-   ret[0] = vec[0]*mat[0][0] + vec[1]*mat[1][0] + vec[2]*mat[2][0]; 
-   ret[1] = vec[0]*mat[0][1] + vec[1]*mat[1][1] + vec[2]*mat[2][1];
-   ret[2] = vec[0]*mat[0][2] + vec[1]*mat[1][2] + vec[2]*mat[2][2];
-                                               
-   return ret;
+  for (unsigned i = 0; i < 3; i++) {
+    for (unsigned j = 0; j < 3; j++) {
+      mtrans[i][j] = _matrix[j][i];
+    }
+  }
+
+  return mtrans;
 }
 
-Matrix3 Matrix3::transpose() const
+matrix3 matrix3::inverse() const
 {
-   Matrix3 mtrans;
+  matrix3 inverse;
 
-   for (unsigned i = 0; i < 3; i++)
-   {
-      for (unsigned j = 0; j < 3; j++)
-	 mtrans[i][j] = _matrix[j][i];
-   }
+  inverse[0][0] = _matrix[1][1]*_matrix[2][2] - _matrix[1][2]*_matrix[2][1];
+  inverse[0][1] = _matrix[0][2]*_matrix[2][1] - _matrix[0][1]*_matrix[2][2];
+  inverse[0][2] = _matrix[0][1]*_matrix[1][2] - _matrix[0][2]*_matrix[1][1];
+  inverse[1][0] = _matrix[1][2]*_matrix[2][0] - _matrix[1][0]*_matrix[2][2];
+  inverse[1][1] = _matrix[0][0]*_matrix[2][2] - _matrix[0][2]*_matrix[2][0];
+  inverse[1][2] = _matrix[0][2]*_matrix[1][0] - _matrix[0][0]*_matrix[1][2];
+  inverse[2][0] = _matrix[1][0]*_matrix[2][1] - _matrix[1][1]*_matrix[2][0];
+  inverse[2][1] = _matrix[0][1]*_matrix[2][0] - _matrix[0][0]*_matrix[2][1];
+  inverse[2][2] = _matrix[0][0]*_matrix[1][1] - _matrix[0][1]*_matrix[1][0];
 
-   return mtrans;
+  Real det = _matrix[0][0]*inverse[0][0] + _matrix[0][1]*inverse[1][0] +
+             _matrix[0][2]*inverse[2][0];
+
+  assert(std::abs(det) > 0.0);
+
+  // fix this - probably shouldnt return zero
+  if (std::abs(det) == 0.0) {
+    return matrix3::ZERO;
+  }
+
+  Real idet = 1.0/det;
+
+  for (unsigned i = 0; i < 3; i++) {
+    for (unsigned j = 0; j < 3; j++) {
+      inverse[i][j] *= idet;
+    }
+  }
+
+  return inverse;
+
 }
 
-Matrix3 Matrix3::inverse() const
+Real matrix3::determinant() const
 {
-   Matrix3 inverse;
+  Real cofactor00 = _matrix[1][1]*_matrix[2][2] - _matrix[1][2]*_matrix[2][1];
+  Real cofactor10 = _matrix[1][2]*_matrix[2][0] - _matrix[1][0]*_matrix[2][2];
+  Real cofactor20 = _matrix[1][0]*_matrix[2][1] - _matrix[1][1]*_matrix[2][0];
 
-   inverse[0][0] = _matrix[1][1]*_matrix[2][2] - _matrix[1][2]*_matrix[2][1];
-   inverse[0][1] = _matrix[0][2]*_matrix[2][1] - _matrix[0][1]*_matrix[2][2];
-   inverse[0][2] = _matrix[0][1]*_matrix[1][2] - _matrix[0][2]*_matrix[1][1];
-   inverse[1][0] = _matrix[1][2]*_matrix[2][0] - _matrix[1][0]*_matrix[2][2];
-   inverse[1][1] = _matrix[0][0]*_matrix[2][2] - _matrix[0][2]*_matrix[2][0];
-   inverse[1][2] = _matrix[0][2]*_matrix[1][0] - _matrix[0][0]*_matrix[1][2];
-   inverse[2][0] = _matrix[1][0]*_matrix[2][1] - _matrix[1][1]*_matrix[2][0];
-   inverse[2][1] = _matrix[0][1]*_matrix[2][0] - _matrix[0][0]*_matrix[2][1];
-   inverse[2][2] = _matrix[0][0]*_matrix[1][1] - _matrix[0][1]*_matrix[1][0];
+  Real det = _matrix[0][0]*cofactor00 + _matrix[0][1]*cofactor10 +
+             _matrix[0][2]*cofactor20;
 
-   Real det = _matrix[0][0]*inverse[0][0] + _matrix[0][1]*inverse[1][0] + _matrix[0][2]*inverse[2][0];
-
-   if (realAbs(det) == 0.0)
-   {
-      return *this;
-   }
-
-   Real idet = 1.0/det;
-
-   for (unsigned i = 0; i < 3; i++)
-   {
-      for (unsigned j = 0; j < 3; j++)
-      {	
-	 inverse[i][j] *= idet;  
-      }
-   }
-
-   return inverse;
-	
-}
-
-Real Matrix3::determinant() const
-{
-   Real cofactor00 = _matrix[1][1]*_matrix[2][2] - _matrix[1][2]*_matrix[2][1];
-   Real cofactor10 = _matrix[1][2]*_matrix[2][0] - _matrix[1][0]*_matrix[2][2];
-   Real cofactor20 = _matrix[1][0]*_matrix[2][1] - _matrix[1][1]*_matrix[2][0];
-
-   Real det = _matrix[0][0]*cofactor00 + _matrix[0][1]*cofactor10 + _matrix[0][2]*cofactor20;
-
-   return det;
+  return det;
 
 }

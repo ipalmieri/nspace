@@ -4,181 +4,183 @@
 #include "sigpro/filter.h"
 #include "algebra.h"
 
-namespace tools
+namespace tools {
+////////////////////////////////////////////////////////
+/// Base class for a FIR Filter Adaptive Trainer
+////////////////////////////////////////////////////////
+class firTrainer
 {
-   ////////////////////////////////////////////////////////
-   /// Base class for a FIR Filter Adaptive Trainer
-   ////////////////////////////////////////////////////////
-   class firTrainer
-   {
-     public:
+ public:
 
-      firTrainer(firFilter *f) { _f = f; }
-      virtual ~firTrainer() {}
-      virtual void updateWeights(const Complex &d) = 0;
-     
-     protected:
+  firTrainer(firFilter* f)
+  {
+    _f = f;
+  }
+  virtual ~firTrainer() {}
+  virtual void updateWeights(const signalSample& d) = 0;
 
-      firFilter *_f; ///< filter to be updated
-   };
+ protected:
+
+  firFilter* _f; ///< filter to be updated
+};
 
 
-   ////////////////////////////////////////////////////////
-   /// LMS algorithm firTrainer
-   ////////////////////////////////////////////////////////
-   class algoLMS : public firTrainer
-   {
-     public:
+////////////////////////////////////////////////////////
+/// LMS algorithm firTrainer
+////////////////////////////////////////////////////////
+class algoLMS : public firTrainer
+{
+ public:
 
-      algoLMS(const Real &mu, firFilter *f);
-      ~algoLMS();
-      void updateWeights(const Complex &d); 
-
-
-     protected:
-
-      Real _mu;
-   };
+  algoLMS(const Real& mu, firFilter* f);
+  ~algoLMS();
+  void updateWeights(const signalSample& d);
 
 
-   ////////////////////////////////////////////////////////
-   /// Normalized LMS algorithm firTrainer
-   ////////////////////////////////////////////////////////
-   class algoNLMS : public firTrainer 
-   {
-     public:
+ protected:
 
-      algoNLMS(const Real &mu, const Real &eps, firFilter *f);
-      ~algoNLMS();
-      void updateWeights(const Complex &d); 
+  Real _mu;
+};
 
 
-     protected:
+////////////////////////////////////////////////////////
+/// Normalized LMS algorithm firTrainer
+////////////////////////////////////////////////////////
+class algoNLMS : public firTrainer
+{
+ public:
 
-      Real _eps;
-      Real _mu;
-   };
-
-
-   ////////////////////////////////////////////////////////
-   /// RLS algorithm firTrainer
-   ////////////////////////////////////////////////////////
-   class algoRLS : public firTrainer
-   {
-     public:
-
-      algoRLS(const Real &lambda, const Real &eps, firFilter *f);
-      ~algoRLS();
-      void updateWeights(const Complex &d); 
+  algoNLMS(const Real& mu, const Real& eps, firFilter* f);
+  ~algoNLMS();
+  void updateWeights(const signalSample& d);
 
 
-     protected:
+ protected:
 
-      cMatrixN _Pmat;
-      Real _eps;
-      Real _lambda;
-   };
-
-
-   ////////////////////////////////////////////////////////
-   /// VSS-LMS algorithm firTrainer
-   ////////////////////////////////////////////////////////
-   class algoVSSLMS : public firTrainer
-   { 
-     public:
-
-      algoVSSLMS(const Real &mumin, const Real &mumax,
-		 const Real &alpha, const Real &lambda, firFilter *f);
-      ~algoVSSLMS();
-      void updateWeights(const Complex &d);
+  Real _eps;
+  Real _mu;
+};
 
 
-     protected:
+////////////////////////////////////////////////////////
+/// RLS algorithm firTrainer
+////////////////////////////////////////////////////////
+class algoRLS : public firTrainer
+{
+ public:
 
-      Real _mumax;
-      Real _mumin;
-      Real _alpha;
-      Real _lambda;
-      Real _mu;
-   };
-
-
-   ////////////////////////////////////////////////////////
-   /// RVS-LMS algorithm firTrainer
-   ////////////////////////////////////////////////////////
-   class algoRVSLMS : public firTrainer
-   { 
-     public:
-
-      algoRVSLMS(const Real &mumin, const Real &mumax,
-		 const Real &alpha, const Real &lambda, 
-		 const Real &beta, firFilter *f);
-      ~algoRVSLMS();
-      void updateWeights(const Complex &d);
+  algoRLS(const Real& lambda, const Real& eps, firFilter* f);
+  ~algoRLS();
+  void updateWeights(const signalSample& d);
 
 
-     protected:
+ protected:
 
-      Real _mumax;
-      Real _mumin;
-      Real _alpha;
-      Real _lambda;
-      Real _beta;
-      Real _mu;
-      Complex _p, _ek;
-   };
+  matrixN<signalSample> _Pmat;
+  Real _eps;
+  Real _lambda;
+};
 
 
-   ////////////////////////////////////////////////////////
-   /// CPVS-LMS algorithm firTrainer
-   ////////////////////////////////////////////////////////
-   class algoCPVSLMS : public firTrainer
-   { 
-     public:
+////////////////////////////////////////////////////////
+/// VSS-LMS algorithm firTrainer
+////////////////////////////////////////////////////////
+class algoVSSLMS : public firTrainer
+{
+ public:
 
-      algoCPVSLMS(const Real &mumin, const Real &mumax,
-		 const Real &alpha, const unsigned &period, 
-		 firFilter *f);
-      ~algoCPVSLMS();
-      void updateWeights(const Complex &d);
+  algoVSSLMS(const Real& mumin, const Real& mumax,
+             const Real& alpha, const Real& lambda, firFilter* f);
+  ~algoVSSLMS();
+  void updateWeights(const signalSample& d);
 
 
-     protected:
+ protected:
 
-      Real _mumax;
-      Real _mumin;
-      Real _alpha;
-      Real _mu1;
-      Real _mu2;
-      unsigned _T;
-      unsigned _tcount;
-      firFilter *_speedFil;
-      algoLMS *_alms;
-      Real _e1;
-      Real _e2;
-   };
+  Real _mumax;
+  Real _mumin;
+  Real _alpha;
+  Real _lambda;
+  Real _mu;
+};
 
-   
-   ////////////////////////////////////////////////////////
-   /// VS-NLMS algorithm firTrainer
-   ////////////////////////////////////////////////////////
-   class algoVSNLMS : public firTrainer
-   { 
-     public:
 
-      algoVSNLMS(const Real &mumax, const Real &alpha, 
-		 const Real &epsilon, firFilter *f);
-      ~algoVSNLMS();
-      void updateWeights(const Complex &d);
+////////////////////////////////////////////////////////
+/// RVS-LMS algorithm firTrainer
+////////////////////////////////////////////////////////
+class algoRVSLMS : public firTrainer
+{
+ public:
 
-     protected:
+  algoRVSLMS(const Real& mumin, const Real& mumax,
+             const Real& alpha, const Real& lambda,
+             const Real& beta, firFilter* f);
+  ~algoRVSLMS();
+  void updateWeights(const signalSample& d);
 
-      Real _mumax;
-      Real _alpha;
-      Real _epsilon;
-      Real _mu;
-      cVectorN _p;
-   };
+
+ protected:
+
+  Real _mumax;
+  Real _mumin;
+  Real _alpha;
+  Real _lambda;
+  Real _beta;
+  Real _mu;
+  signalSample _p, _ek;
+};
+
+
+////////////////////////////////////////////////////////
+/// CPVS-LMS algorithm firTrainer
+////////////////////////////////////////////////////////
+class algoCPVSLMS : public firTrainer
+{
+ public:
+
+  algoCPVSLMS(const Real& mumin, const Real& mumax,
+              const Real& alpha, const unsigned& period,
+              firFilter* f);
+  ~algoCPVSLMS();
+  void updateWeights(const signalSample& d);
+
+
+ protected:
+
+  Real _mumax;
+  Real _mumin;
+  Real _alpha;
+  Real _mu1;
+  Real _mu2;
+  unsigned _T;
+  unsigned _tcount;
+  firFilter* _speedFil;
+  algoLMS* _alms;
+  Real _e1;
+  Real _e2;
+};
+
+
+////////////////////////////////////////////////////////
+/// VS-NLMS algorithm firTrainer
+////////////////////////////////////////////////////////
+class algoVSNLMS : public firTrainer
+{
+ public:
+
+  algoVSNLMS(const Real& mumax, const Real& alpha,
+             const Real& epsilon, firFilter* f);
+  ~algoVSNLMS();
+  void updateWeights(const signalSample& d);
+
+ protected:
+
+  Real _mumax;
+  Real _alpha;
+  Real _epsilon;
+  Real _mu;
+  vectorN<signalSample> _p;
+};
 }
 
 #endif //__ADAPFIL_H__

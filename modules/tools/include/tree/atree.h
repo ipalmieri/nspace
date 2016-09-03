@@ -1,17 +1,16 @@
 #ifndef __ATREE_H__
 #define __ATREE_H__
 
-namespace tools
+namespace tools {
+class atree
 {
-   class atree
-   {
-     public:
-      atree() {}
-      ~atree() {}
+ public:
+  atree() {}
+  ~atree() {}
 
-     protected:
+ protected:
 
-   };
+};
 }
 
 #endif //__ATREE_H__

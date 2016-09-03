@@ -3,23 +3,23 @@
 using namespace tools;
 using namespace std;
 
-cMatrixN tools::conjugate(const cMatrixN &mat)
+cmatrixN tools::conjugate(const cmatrixN& mat)
 {
-   cMatrixN ret(mat.rows(), mat.columns());
+  cmatrixN ret(mat.rows(), mat.columns());
 
-   for (unsigned i = 0; i < mat.rows(); i++)
-   {
-      for (unsigned j = 0; j < mat.columns(); j++)
-	 ret[i][j] = conj(mat[i][j]);
-   }
-   return ret;
+  for (unsigned i = 0; i < mat.rows(); i++) {
+    for (unsigned j = 0; j < mat.columns(); j++) {
+      ret[i][j] = std::conj(mat[i][j]);
+    }
+  }
+  return ret;
 }
 
-cMatrixN tools::adjoint(const cMatrixN &mat)
+cmatrixN tools::adjoint(const cmatrixN& mat)
 {
-   cMatrixN ret(transpose(mat));
+  cmatrixN ret(transpose(mat));
 
-   ret = conjugate(ret);
-	 
-   return ret;
+  ret = conjugate(ret);
+
+  return ret;
 }

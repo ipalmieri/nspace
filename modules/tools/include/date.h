@@ -3,52 +3,52 @@
 
 #include <string>
 
-namespace tools
+namespace tools {
+///////////////////////////////////////////////
+/// Simple DD/MM/YY class with arithmetic
+///////////////////////////////////////////////
+class date
 {
-   ///////////////////////////////////////////////
-   /// Simple DD/MM/YY class with arithmetic
-   ///////////////////////////////////////////////
-   class date
-   {
-     public:
-      date(const uint &day, const uint &month, const uint &year);
-      ~date();
+ public:
+  date(const uint& day, const uint& month, const uint& year);
+  ~date();
 
-      //operações de conversão - tirar daqui
-      static std::string mysqlConvert(const std::string &date);
-      static std::string mysqlRevert(const std::string &date);
+  //operações de conversão - tirar daqui
+  static std::string mysqlConvert(const std::string& date);
+  static std::string mysqlRevert(const std::string& date);
 
-      std::string toStr();
-      std::string toMSQLStr();
+  std::string toStr();
+  std::string toMSQLStr();
 
-      ushort day;
-      ushort month;
-      ushort year;
+  ushort day;
+  ushort month;
+  ushort year;
 
-      bool operator<(const date &date) const;
-      bool operator>(const date &date) const;
-      bool operator==(const date &date) const;
-      bool operator!=(const date &date) const;
-      bool operator<=(const date &date) const;
-      bool operator>=(const date &date) const;
+  bool operator<(const date& date) const;
+  bool operator>(const date& date) const;
+  bool operator==(const date& date) const;
+  bool operator!=(const date& date) const;
+  bool operator<=(const date& date) const;
+  bool operator>=(const date& date) const;
 
-      int daysFrom(const date &date) const;
-      date offsetDays(int days); 
-		
-      bool isValid() const;
+  int daysFrom(const date& date) const;
+  date offsetDays(int days);
 
-      static unsigned int daysOfMonth(const unsigned int &month, const unsigned int &year);
-      static bool isLeapYear(const unsigned int &year);
+  bool isValid() const;
 
-      static date today();
-      static date strToDate(const std::string &str);
-		
+  static unsigned int daysOfMonth(const unsigned int& month,
+                                  const unsigned int& year);
+  static bool isLeapYear(const unsigned int& year);
 
-     protected:
+  static date today();
+  static date strToDate(const std::string& str);
 
-      static unsigned int daysFromStart(const date &date);
 
-   };
+ protected:
+
+  static unsigned int daysFromStart(const date& date);
+
+};
 
 
 }

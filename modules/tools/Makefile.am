@@ -2,6 +2,7 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
+
 #AM_CPPFLAGS= \
 #            -Iinclude 
 
@@ -46,15 +47,17 @@ libtools_a_HEADERS = 	\
 			include/graph/dgraph.h \
 			include/graph/dnode.h \
 			include/multimedia/imagemap.h \
+			include/multimedia/csvtools.h \
 			include/tree/atree.h \
 			include/tree/tnode.h \
 			include/spool.h \
 			include/timemark.h \
 			include/timepoint.h \
 			include/mnet.h \
-			include/net/tcpsocket.h \
-			include/net/tcpserver.h \
-			include/net/tcpmsg.h
+			include/mnet/tcpsocket.h \
+			include/mnet/tcpserver.h \
+			include/mnet/tcpmsg.h \
+			include/sigpro/sigtools.h
 
 
 # the sources to add to the library and to add to the source distribution
@@ -75,15 +78,13 @@ libtools_a_SOURCES =	\
 			src/logger.cpp \
 			src/sigpro/filter.cpp \
 			src/sigpro/adapfil.cpp \
-			src/algebra/matrixn.cpp \
-			src/algebra/vectorn.cpp \
 			src/algebra/transmatrix.cpp \
 			src/multimedia/imagemap.cpp \
 			src/timemark.cpp \
 			src/timepoint.cpp \
-			src/net/tcpsocket.cpp \
-			src/net/tcpserver.cpp \
-			src/net/tcpmsg.cpp
+			src/mnet/tcpsocket.cpp \
+			src/mnet/tcpserver.cpp \
+			src/mnet/tcpmsg.cpp
 
 
 

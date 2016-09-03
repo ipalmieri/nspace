@@ -1,193 +1,252 @@
 #ifndef __VECTORN_H__
 #define __VECTORN_H__
 
-#include <stdlib.h>
+#include <type_traits>
+#include <cstdlib>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <cassert>
 #include "adefs.h"
 
 #define AL_MAX_VSIZE 104857600
 
-namespace tools
+namespace tools {
+//////////////////////////////////////////////
+/// vectorN is a multi length vector type
+/// for hilbert space algebra
+//////////////////////////////////////////////
+template<typename T> class vectorN
 {
-   //////////////////////////////////////////////
-   /// VectorN is a multi length vector type
-   /// for hilbert space algebra
-   //////////////////////////////////////////////
-   template<typename T> class VectorN 
-   {
-     public:
-      
-      explicit VectorN(const unsigned &n, const T &value=0)
-      {
-	 _vector = NULL;
-	 _size = 0;
+ public:
 
-	 init(n);
-	 
-	 for (unsigned i = 0; i < _size; i++) 
-	    _vector[i] = value;
-      } 
-      
-      VectorN(const VectorN<T> &vec)
-      {
-	 init(vec._size);
-	 
-	 for (unsigned i = 0; i < _size; i++) 
-	    _vector[i] = vec[i];
-      }
+  explicit vectorN(const unsigned& n, const T& value=0)
+  {
+    _vector = (T*) NULL;
+    _size = 0;
 
-      virtual ~VectorN() 
-      { 
-	 if (_vector)
-	    free(_vector); 
-      }
-      
-      inline unsigned size() const { return _size; }
+    init(n);
 
-      inline T &operator[](const unsigned &index) 
-      {
-	 assert(index < _size);
-	 return _vector[index]; 
-      }
-      
-      inline T operator[](const unsigned &index) const 
-      { 
-	 assert(index < _size);
-	 return _vector[index]; 
-      }
+    for (unsigned i = 0; i < _size; i++) {
+      _vector[i] = value;
+    }
+  }
 
-      VectorN<T> &operator=(const VectorN<T> &vec) 
-      {
-	 if (_size != vec.size())
-	    init(vec._size);
+  vectorN(const vectorN<T>& vec)
+  {
+    _vector = (T*) NULL;
+    _size = 0;
 
-	 for (unsigned i = 0; i < _size; i++)
-	     _vector[i] = vec[i];
-	 
-	 return (*this);
-      }
-      
-      VectorN<T> operator+(const VectorN<T> &vec) const
-      {
-	 VectorN<T> sum(_size);
+    init(vec.size());
 
-	 assert(_size == vec.size());
+    for (unsigned i = 0; i < _size; i++) {
+      _vector[i] = vec[i];
+    }
+  }
 
-	 for (unsigned i = 0; i < _size; i++)
-	        sum[i] = _vector[i] + vec[i];
-	 
-	 return sum;
-      }
+  virtual ~vectorN()
+  {
+    if (_vector) {
+      free(_vector);
+    }
+  }
 
-      VectorN<T> operator-(const VectorN<T> &vec) const
-      {
-	 VectorN<T> sum(_size);
+  inline unsigned size() const
+  {
+    return _size;
+  }
 
-	 assert(_size == vec.size());
+  inline T& operator[](const unsigned& index)
+  {
+    assert(index < _size);
+    return _vector[index];
+  }
 
-	 for (unsigned i = 0; i < _size; i++)
-	        sum[i] = _vector[i] - vec[i];
-	 
-	 return sum;
-      }
+  inline T operator[](const unsigned& index) const
+  {
+    assert(index < _size);
+    return _vector[index];
+  }
 
-      //dot product
-      T operator*(const VectorN<T> &vec) const
-      {
-	 T ret = (T) 0;
+  vectorN<T>& operator=(const vectorN<T>& vec)
+  {
+    if (_size != vec.size()) {
+      init(vec.size());
+    }
 
-	 assert(_size == vec.size());
+    for (unsigned i = 0; i < _size; i++) {
+      _vector[i] = vec[i];
+    }
 
-	 for (unsigned i = 0; i < _size; i++)
-	    ret += _vector[i]*vec[i];
+    return (*this);
+  }
 
-	 return ret;
-      }
+  vectorN<T> operator+(const vectorN<T>& vec) const
+  {
+    vectorN<T> sum(_size);
 
-      VectorN<T> operator*(const T &scalar) const
-      {
-	 VectorN<T> prod(_size);
+    assert(_size == vec.size());
 
-	 for (unsigned i = 0; i < _size; i++)
-	    prod[i] = _vector[i]*scalar;
+    for (unsigned i = 0; i < _size; i++) {
+      sum[i] = _vector[i] + vec[i];
+    }
 
-	 return prod;	
-      }
-      
-      friend VectorN<T> operator*(const T &scalar, const VectorN<T> &vec) 
-      {
-	 return vec*scalar;
-      }
+    return sum;
+  }
 
-      VectorN<T> operator/(const T &scalar) const
-      {
-	 VectorN<T> prod(_size);
+  vectorN<T> operator-(const vectorN<T>& vec) const
+  {
+    vectorN<T> sum(_size);
 
-	 for (unsigned i = 0; i < _size; i++)
-	    prod[i] = _vector[i]/scalar;
+    assert(_size == vec.size());
 
-	 return prod;
-      }
+    for (unsigned i = 0; i < _size; i++) {
+      sum[i] = _vector[i] - vec[i];
+    }
 
+    return sum;
+  }
 
-      VectorN<T> operator+()
-      {
-	 return *this;
-      }
+  //dot product
+  T operator*(const vectorN<T>& vec) const
+  {
+    T ret = (T) 0;
 
-      VectorN<T> operator-()
-      {
-	 VectorN<T> ret(_size);
+    assert(_size == vec.size());
 
-	 for (unsigned i = 0; i < ret.size(); i++)
-	    ret[i] = - _vector[i];
-	 
-	 return ret;
-      }
+    for (unsigned i = 0; i < _size; i++) {
+      ret += _vector[i]*vec[i];
+    }
 
-      VectorN<T> &operator+=(const VectorN<T> &vec) { return *this + vec; }
-      VectorN<T> &operator-=(const VectorN<T> &vec) { return *this - vec; }
-      VectorN<T> &operator*=(const T &scalar) { return (*this)*scalar; }
-      VectorN<T> &operator*=(const VectorN<T> &vec) { return (*this)*vec; }
-      VectorN<T> &operator/=(const T &scalar) { return (*this)/scalar; }
-      
+    return ret;
+  }
 
-     protected: 
+  vectorN<T> operator*(const T& scalar) const
+  {
+    vectorN<T> prod(_size);
 
-      void init(const unsigned &n)
-      {
-	 unsigned nsize = (unsigned) std::min((unsigned)AL_MAX_VSIZE, 
-				     std::max((unsigned)0, n));
-	 
-	 T *tvec = (T *) realloc(_vector, nsize*sizeof(T));
+    for (unsigned i = 0; i < _size; i++) {
+      prod[i] = _vector[i]*scalar;
+    }
 
-	 if (tvec) 
-	 {
-	    _vector = tvec;
-	    _size = nsize;
-	 }
-      } 
+    return prod;
+  }
 
-    
-      T *_vector;
-      unsigned _size; //N elements
-   };
+  friend vectorN<T> operator*(const T& scalar, const vectorN<T>& vec)
+  {
+    return vec*scalar;
+  }
+
+  vectorN<T> operator/(const T& scalar) const
+  {
+    vectorN<T> prod(_size);
+
+    for (unsigned i = 0; i < _size; i++) {
+      prod[i] = _vector[i]/scalar;
+    }
+
+    return prod;
+  }
 
 
+  vectorN<T> operator+()
+  {
+    return *this;
+  }
 
-   typedef VectorN<Real> rVectorN;
-   typedef VectorN<Complex> cVectorN;
+  vectorN<T> operator-()
+  {
+    vectorN<T> ret(_size);
 
-   //length (norm) of the vector
-   Real length(const rVectorN &vec); 
-   Real length(const cVectorN &vec); 
-   inline Real norm(const rVectorN &vec) { return length(vec); }
-   inline Real norm(const cVectorN &vec) { return length(vec); }
-   cVectorN conjugate(const cVectorN &vec);
-   rVectorN normalize(const rVectorN &vec);
-   cVectorN normalize(const cVectorN &vec);
+    for (unsigned i = 0; i < ret.size(); i++) {
+      ret[i] = - _vector[i];
+    }
+
+    return ret;
+  }
+
+  vectorN<T>& operator+=(const vectorN<T>& vec)
+  {
+    return *this + vec;
+  }
+  vectorN<T>& operator-=(const vectorN<T>& vec)
+  {
+    return *this - vec;
+  }
+  vectorN<T>& operator*=(const T& scalar)
+  {
+    return (*this)*scalar;
+  }
+  vectorN<T>& operator*=(const vectorN<T>& vec)
+  {
+    return (*this)*vec;
+  }
+  vectorN<T>& operator/=(const T& scalar)
+  {
+    return (*this)/scalar;
+  }
+
+
+ protected:
+
+  void init(const unsigned& n)
+  {
+    unsigned nsize = (unsigned) std::min((unsigned)AL_MAX_VSIZE,
+                                         std::max((unsigned)0, n));
+
+    T* tvec = (T*) realloc(_vector, nsize*sizeof(T));
+
+    if (tvec) {
+      _vector = tvec;
+      _size = nsize;
+    }
+  }
+
+
+  T* _vector;
+  unsigned _size; //N elements
+};
+
+
+//////////////////////////////////////////////////////////////
+// Auxiliary functions
+//////////////////////////////////////////////////////////////
+
+template<typename T> inline T length(const vectorN<T>& vec)
+{
+  T ret = 0;
+
+  for (unsigned i = 0; i < vec.size(); i++) {
+    ret += vec[i]*std::conj(vec[i]);
+  }
+
+  return std::sqrt(ret);
+}
+
+template<typename T> inline T norm(const vectorN<T>& vec)
+{
+  return length(vec);
+}
+
+template<typename T> inline vectorN<T> conjugate(const vectorN<T>& vec)
+{
+  vectorN<T> ret(vec.size());
+
+  for (unsigned i = 0; i < vec.size(); i++) {
+    ret[i] = std::conj(vec[i]);
+  }
+
+  return ret;
+}
+
+template<typename T> inline vectorN<T> normalize(const vectorN<T>& vec)
+{
+  T len = length(vec);
+
+  return (len > 0)? vec/len : vec;
+}
+
+typedef vectorN<Real> rvectorN;
+typedef vectorN<Complex> cvectorN;
 
 }
 

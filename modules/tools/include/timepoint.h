@@ -3,66 +3,101 @@
 
 #include "date.h"
 
-namespace tools
+namespace tools {
+//////////////////////////////////////////////
+/// calendar time point in localtime (or UTC)
+/// prone to changes in system clock
+//////////////////////////////////////////////
+class timePoint
 {
-   //////////////////////////////////////////////
-   /// calendar time point in localtime (or UTC)
-   /// prone to changes in system clock
-   //////////////////////////////////////////////
-   class timePoint
-   {
-     public:
-     
-      //timePoint() { (*this) = now(); }
-      timePoint() {}
-      ~timePoint() {}
+ public:
 
-      static timePoint now();
-      static timePoint nowGMT();
-      static timePoint nowUTC() { return nowGMT(); }
-      timePoint toGMT();      
+  //timePoint() { (*this) = now(); }
+  timePoint() {}
+  ~timePoint() {}
 
-      std::string toStr() const;
+  static timePoint now();
+  static timePoint nowGMT();
+  static timePoint nowUTC()
+  {
+    return nowGMT();
+  }
+  timePoint toGMT();
 
-      bool operator<(const timePoint &tp) const;
-      bool operator>(const timePoint &tp) const;
-      bool operator==(const timePoint &tp) const;
-      bool operator!=(const timePoint &tp) const;
-      bool operator<=(const timePoint &tp) const;
-      bool operator>=(const timePoint &tp) const;
+  std::string toStr() const;
 
-      date getDate() const { return date((uint) _day, (uint) _month, (uint) _year); }
+  bool operator<(const timePoint& tp) const;
+  bool operator>(const timePoint& tp) const;
+  bool operator==(const timePoint& tp) const;
+  bool operator!=(const timePoint& tp) const;
+  bool operator<=(const timePoint& tp) const;
+  bool operator>=(const timePoint& tp) const;
 
-      uint year() const { return _year; }
-      uint month() const { return _month; } 
-      uint day() const { return _day; }
-      uint hour() const { return _hour; }
-      uint minute() const { return _minute; }
-      uint second() const { return _second; }
-      uint millisecond() const { return _nano/1000000; }
-      uint microsecond() const { return _nano/1000; }
-      uint nanosecond() const { return _nano; }
+  date getDate() const
+  {
+    return date((uint) _day, (uint) _month, (uint) _year);
+  }
 
-      bool isDST() { return _isDST; }
+  uint year() const
+  {
+    return _year;
+  }
+  uint month() const
+  {
+    return _month;
+  }
+  uint day() const
+  {
+    return _day;
+  }
+  uint hour() const
+  {
+    return _hour;
+  }
+  uint minute() const
+  {
+    return _minute;
+  }
+  uint second() const
+  {
+    return _second;
+  }
+  uint millisecond() const
+  {
+    return _nano/1000000;
+  }
+  uint microsecond() const
+  {
+    return _nano/1000;
+  }
+  uint nanosecond() const
+  {
+    return _nano;
+  }
+
+  bool isDST()
+  {
+    return _isDST;
+  }
 
 
-     protected:
-      
-      //timePoint() {}
-      timePoint(const tm &t, const uint64_t &nano);
-      
-      //helper function
-      tm structTM() const;
+ protected:
 
-      ushort _year;
-      ushort _month;
-      ushort _day;
-      ushort _hour;
-      ushort _minute;
-      ushort _second;
-      uint64_t _nano;
-      bool _isDST;
-   };
+  //timePoint() {}
+  timePoint(const tm& t, const uint64_t& nano);
+
+  //helper function
+  tm structTM() const;
+
+  ushort _year;
+  ushort _month;
+  ushort _day;
+  ushort _hour;
+  ushort _minute;
+  ushort _second;
+  uint64_t _nano;
+  bool _isDST;
+};
 }
 
 #endif //__TIMEPOINT_H__

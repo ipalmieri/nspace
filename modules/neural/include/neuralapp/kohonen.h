@@ -4,147 +4,170 @@
 #include "neuralnet.h"
 #include "kneuron.h"
 
-namespace neural
+namespace neural {
+class kohonenNet:public neuralNet
 {
-   class kohonenNet:public neuralNet
-   {
-      friend class kTrainer;
- 
-     public:
-      kohonenNet(const unsigned int &ninputs);
-      virtual ~kohonenNet();
+  friend class kTrainer;
 
-      neuron *createNeuron() { return (neuron *) NULL; }
-      void deleteNeuron(neuron *nr) {}
-      void deleteNeuron(const tools::nodeId &id) {}
+ public:
+  kohonenNet(const unsigned int& ninputs);
+  virtual ~kohonenNet();
 
-      void connectNeurons(neuron *nr1, neuron *nr2) {}
-      void disconnectNeurons(neuron *nr1, neuron *nr2) {}
+  neuron* createNeuron()
+  {
+    return (neuron*) NULL;
+  }
+  void deleteNeuron(neuron* nr) {}
+  void deleteNeuron(const tools::nodeId& id) {}
 
-      void addOutput(const double &x, const double &y, const double &z = 0.0);
-      kneuron *inputBMU();
- 
-      double avgDist(kneuron *nr, const double &radius);
-      std::vector<nsignal> spatialUMatrix(const double &radius);
+  void connectNeurons(neuron* nr1, neuron* nr2) {}
+  void disconnectNeurons(neuron* nr1, neuron* nr2) {}
 
-      double quantizationError();
-      double topographicError(const double &radius);
+  void addOutput(const double& x, const double& y, const double& z = 0.0);
+  kneuron* inputBMU();
 
-     protected:
+  double avgDist(kneuron* nr, const double& radius);
+  tools::vectorN<nsignal> spatialUMatrix(const double& radius);
 
-      
-     private:
+  double quantizationError();
+  double topographicError(const double& radius);
 
-   };
-
-   //3D square kohonenNet
-   class kohonenCube : public kohonenNet 
-   {
-     public:
-      friend class kMan;
-
-      kohonenCube(const unsigned &ninputs,
-		  const unsigned &x, 
-		  const unsigned &y,
-		  const unsigned &z,
-		  const double &width,
-		  const double &height,
-		  const double &depth);
-      ~kohonenCube();
-
-      inline unsigned xNeurons() const { return _nx; }
-      inline unsigned yNeurons() const { return _ny; }      
-      inline unsigned zNeurons() const { return _nz; }
-
-      inline double width() const { return _width; }
-      inline double height() const { return _height; }
-      inline double depth() const { return _depth; }
-      
-     protected:
-      
-      unsigned _nx;
-      unsigned _ny;
-      unsigned _nz;
-
-      double _width;
-      double _height;
-      double _depth;
-
-   };
+ protected:
 
 
-   //trainer for kohonenNets
-   class kTrainer
-   {
-     public:
-      kTrainer(kohonenNet *kmap, const double &psigma, const double &plambda);
-      ~kTrainer();
+ private:
 
-      void fitCurrentInput();
- 
-      bool borderMode;
+};
 
-     protected:
+//3D square kohonenNet
+class kohonenCube : public kohonenNet
+{
+ public:
+  friend class kMan;
 
-      kohonenNet *_kmap;
+  kohonenCube(const unsigned& ninputs,
+              const unsigned& x,
+              const unsigned& y,
+              const unsigned& z,
+              const double& width,
+              const double& height,
+              const double& depth);
+  ~kohonenCube();
 
-      double _rlimit;
-      double _sigma0;
-      double _lambda;
-      double _t;
+  inline unsigned xNeurons() const
+  {
+    return _nx;
+  }
+  inline unsigned yNeurons() const
+  {
+    return _ny;
+  }
+  inline unsigned zNeurons() const
+  {
+    return _nz;
+  }
 
-      void updateWeights(const double &px, const double &py, const double &pz);
+  inline double width() const
+  {
+    return _width;
+  }
+  inline double height() const
+  {
+    return _height;
+  }
+  inline double depth() const
+  {
+    return _depth;
+  }
 
-      double alfa(const double &t);
-      double theta(const double &dist);
+ protected:
 
-      afunction *_spacedecay;
-      afunction *_timedecay;
+  unsigned _nx;
+  unsigned _ny;
+  unsigned _nz;
 
-   };
+  double _width;
+  double _height;
+  double _depth;
+
+};
 
 
-   //auxiliary class for 2D and 3D square maps
-   class kMan
-   {
-     public:
-      kMan(kohonenCube *kmap) { _kmap = kmap; }
-      ~kMan() {}
+//trainer for kohonenNets
+class kTrainer
+{
+ public:
+  kTrainer(kohonenNet* kmap, const double& psigma, const double& plambda);
+  ~kTrainer();
 
-      void printKmap();
-      void printUMatrix(const double &radius);
+  void fitCurrentInput();
 
-      void saveOutputImage(const std::string &filename);
-      void saveUMatrixImage(const std::string &filename, const double &radius);
-      void saveImage(const std::string &filename, std::vector<nsignal> outp);      
+  bool borderMode;
 
-     protected:
+ protected:
 
-      kohonenCube *_kmap;
-   };
-   
+  kohonenNet* _kmap;
 
-   //auxiliary functions
-   inline kohonenCube *kreateCube(const unsigned &ninputs,
-				  const unsigned &x, 
-				  const unsigned &y,
-				  const unsigned &z,
-				  const double &width,
-				  const double &height,
-				  const double &depth)
-   {
-      return new kohonenCube(ninputs, x, y, z, width, height, depth);
-   }
+  double _rlimit;
+  double _sigma0;
+  double _lambda;
+  double _t;
 
-      
-   inline kohonenCube *kreateMap(const unsigned &ninputs,
-				 const unsigned &x, 
-				 const unsigned &y,
-				 const double &width,
-				 const double &height)
-   {
-      return kreateCube(ninputs, x, y, 1, width, height, 0.0);
-   }
+  void updateWeights(const double& px, const double& py, const double& pz);
+
+  double alfa(const double& t);
+  double theta(const double& dist);
+
+  afunction* _spacedecay;
+  afunction* _timedecay;
+
+};
+
+
+//auxiliary class for 2D and 3D square maps
+class kMan
+{
+ public:
+  kMan(kohonenCube* kmap)
+  {
+    _kmap = kmap;
+  }
+  ~kMan() {}
+
+  void printKmap();
+  void printUMatrix(const double& radius);
+
+  void saveOutputImage(const std::string& filename);
+  void saveUMatrixImage(const std::string& filename, const double& radius);
+  void saveImage(const std::string& filename, tools::vectorN<nsignal> outp);
+
+ protected:
+
+  kohonenCube* _kmap;
+};
+
+
+//auxiliary functions
+inline kohonenCube* kreateCube(const unsigned& ninputs,
+                               const unsigned& x,
+                               const unsigned& y,
+                               const unsigned& z,
+                               const double& width,
+                               const double& height,
+                               const double& depth)
+{
+  return new kohonenCube(ninputs, x, y, z, width, height, depth);
+}
+
+
+inline kohonenCube* kreateMap(const unsigned& ninputs,
+                              const unsigned& x,
+                              const unsigned& y,
+                              const double& width,
+                              const double& height)
+{
+  return kreateCube(ninputs, x, y, 1, width, height, 0.0);
+}
 
 
 }
