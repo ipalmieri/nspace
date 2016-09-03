@@ -9,238 +9,234 @@ using namespace std;
 using namespace tools;
 using namespace advtec;
 
-chromossome::chromossome(const unsigned &size, const unsigned &generation)
+chromossome::chromossome(const unsigned& size, const unsigned& generation)
 {
-   _generation = generation;
+  _generation = generation;
 
-   for (unsigned i=0; i < size; i++)
-   {
-      _genes.push_back(NULL);
-   }
-   
-   id = 0;
+  for (unsigned i=0; i < size; i++) {
+    _genes.push_back(NULL);
+  }
+
+  id = 0;
 }
 
 chromossome::~chromossome()
 {
-   for (unsigned i = 0; i < _genes.size(); i++)
-   {
-      delete _genes[i];
-   }
+  for (unsigned i = 0; i < _genes.size(); i++) {
+    delete _genes[i];
+  }
 }
 
-void chromossome::mutate(const double &rate, const double &genRate)
+void chromossome::mutate(const double& rate, const double& genRate)
 {
-   unsigned mcount = cint((unsigned) ((double) _genes.size() * min((double) 1.0f, max((double)0.0f, rate))));
-   vector<unsigned> chvec;
-   unsigned pos;
+  unsigned mcount = cint((unsigned) ((double) _genes.size() * min((double) 1.0f,
+                                     max((double)0.0f, rate))));
+  vector<unsigned> chvec;
+  unsigned pos;
 
-   for (unsigned i = 0; i < mcount; i++)
-   {
-      do {
+  for (unsigned i = 0; i < mcount; i++) {
+    do {
 
-	 pos = randU(0, _genes.size() - 1);
+      pos = randU(0, _genes.size() - 1);
 
-      } while (find(chvec.begin(), chvec.end(), pos) != chvec.end());
+    } while (find(chvec.begin(), chvec.end(), pos) != chvec.end());
 
-      chvec.push_back(pos);
+    chvec.push_back(pos);
 
-      if (_genes[pos] != NULL)
-	 _genes[pos]->mutate(genRate);
+    if (_genes[pos] != NULL) {
+      _genes[pos]->mutate(genRate);
+    }
 
-   }
+  }
 }
 
-chromossome *chromossome::crossover(vector<chromossome *> vec)
+chromossome* chromossome::crossover(vector<chromossome*> vec)
 {
-   unsigned pcount = vec.size();
-   unsigned csize, gener;
-   
-   //if (pcount <= 0) return error
-   
-   //calculate size and generation of the child
-   csize = vec[0]->geneCount();
-   gener = vec[0]->generation();
-   for (unsigned i = 1; i < pcount; i++)
-   {
-      if (vec[i]->geneCount() > csize)
-	 csize = vec[i]->geneCount();
+  unsigned pcount = vec.size();
+  unsigned csize, gener;
 
-      if (vec[i]->generation() > gener)
-	 gener = vec[i]->generation();
-   }
+  //if (pcount <= 0) return error
 
-   //create the child
-   chromossome *child = new chromossome(csize, gener + 1);
+  //calculate size and generation of the child
+  csize = vec[0]->geneCount();
+  gener = vec[0]->generation();
+  for (unsigned i = 1; i < pcount; i++) {
+    if (vec[i]->geneCount() > csize) {
+      csize = vec[i]->geneCount();
+    }
 
-   for (unsigned i = 0; i < csize; i++)
-   {
-      unsigned sgen;
+    if (vec[i]->generation() > gener) {
+      gener = vec[i]->generation();
+    }
+  }
 
-      do {
+  //create the child
+  chromossome* child = new chromossome(csize, gener + 1);
 
-	 sgen = randU(0, pcount - 1);
+  for (unsigned i = 0; i < csize; i++) {
+    unsigned sgen;
 
-      } while (i >= vec[sgen]->geneCount());
+    do {
 
-      gene *ng = NULL;
-      gene *pg = vec[sgen]->getGene(i);
+      sgen = randU(0, pcount - 1);
 
-      if (pg != NULL)
-      {
-	 ng = pg->createCopy();
-      }
+    } while (i >= vec[sgen]->geneCount());
 
-      child->setGene(i, ng);
-      
-   }
+    gene* ng = NULL;
+    gene* pg = vec[sgen]->getGene(i);
 
-   return child;
+    if (pg != NULL) {
+      ng = pg->createCopy();
+    }
+
+    child->setGene(i, ng);
+
+  }
+
+  return child;
 }
 
-void chromossome::setGene(const unsigned &position, gene *gen)
+void chromossome::setGene(const unsigned& position, gene* gen)
 {
-   if (position < _genes.size())
-   {
-      delete _genes[position];
+  if (position < _genes.size()) {
+    delete _genes[position];
 
-      _genes[position] = gen;
-   }
+    _genes[position] = gen;
+  }
 }
 
-gene *chromossome::getGene(const unsigned &position)
+gene* chromossome::getGene(const unsigned& position)
 {
-   if (position < _genes.size())
-   {
+  if (position < _genes.size()) {
 
-      return _genes[position];
-   }
+    return _genes[position];
+  }
 
-   return NULL;
+  return NULL;
 }
 
 
 //============= gamethod ====================
 gaMethod::gaMethod()
 {
-   _gcount = 0;
+  _gcount = 0;
 
-   breedCoef = 1.0f;
-   inertCoef = 0.1f;
-   deathRate = 0.0f;
-   popMutRate = 0.0f;
-   chrMutRate = 0.0f;
-   genMutRate = 0.0f;
-   maxPopulation = 0;
+  breedCoef = 1.0f;
+  inertCoef = 0.1f;
+  deathRate = 0.0f;
+  popMutRate = 0.0f;
+  chrMutRate = 0.0f;
+  genMutRate = 0.0f;
+  maxPopulation = 0;
 
-   parentReq = 2;
-   breedProd = 1;
+  parentReq = 2;
+  breedProd = 1;
 
-   _nextid = 0;
+  _nextid = 0;
 }
 
 gaMethod::~gaMethod()
 {
-   for (unsigned i = 0; i < _population.size(); i++)
-   {
-      delete _population[i];
-   }
+  for (unsigned i = 0; i < _population.size(); i++) {
+    delete _population[i];
+  }
 }
 
 void gaMethod::stepGeneration()
 {
-   breed();
+  breed();
 
-   mutate();
+  mutate();
 
-   rank();
+  rank();
 
-   select();
+  select();
 
-   _gcount++;
+  _gcount++;
 }
 
-//evaluate and order population by fitness 
+//evaluate and order population by fitness
 void gaMethod::rank()
 {
-   evalPopulation();
+  evalPopulation();
 }
 
 //kill pop*deathRate least adapted chromossomes
 void gaMethod::select()
 {
-   unsigned rlen = cint(max((double)0.0f, min(deathRate, (double) 1.0f))*((double)_population.size()));
-    
-   if (maxPopulation != 0 && _population.size() > maxPopulation)
-      rlen = max(rlen, (unsigned) _population.size() - maxPopulation);
+  unsigned rlen = cint(max((double)0.0f, min(deathRate,
+                           (double) 1.0f))*((double)_population.size()));
 
-   for (unsigned i = 0; i < rlen; i++)
-   {
-      delete _population.back();
-      
-      _population.pop_back();
-   }
+  if (maxPopulation != 0 && _population.size() > maxPopulation) {
+    rlen = max(rlen, (unsigned) _population.size() - maxPopulation);
+  }
+
+  for (unsigned i = 0; i < rlen; i++) {
+    delete _population.back();
+
+    _population.pop_back();
+  }
 }
 
 //breed in proportion parentReq:breedProd
 void gaMethod::breed()
 {
-   unsigned pcount = cint(breedCoef * (double)_population.size()/(double)parentReq);
-   vector<chromossome *> children;
+  unsigned pcount = cint(breedCoef * (double)_population.size()/
+                         (double)parentReq);
+  vector<chromossome*> children;
 
-   for (unsigned i = 0; i < pcount; i++)
-   {
-      vector<chromossome *> parents;
-      
-      for (unsigned j = 0; j < parentReq; j++)
-      {
-	 unsigned ppos;
-	 
-	 do {
-	    
-	    ppos = randU(0, breedCoef * _population.size() - 1);
+  for (unsigned i = 0; i < pcount; i++) {
+    vector<chromossome*> parents;
 
-	 } while (find(parents.begin(), parents.end(), _population[ppos]) != parents.end());
-	 
-	 parents.push_back(_population[ppos]);
-      }
-  
-      for (unsigned j = 0; j < breedProd; j++)
-      {
-	 chromossome *chr = chromossome::crossover(parents);
-	 chr->id = _nextid;
-	 _nextid++;
-	 children.push_back(chr);
-      }
- 
-   }
-    
-   for (unsigned i = 0; i < children.size(); i++)
-      _population.push_back(children[i]);
+    for (unsigned j = 0; j < parentReq; j++) {
+      unsigned ppos;
+
+      do {
+
+        ppos = randU(0, breedCoef * _population.size() - 1);
+
+      } while (find(parents.begin(), parents.end(),
+                    _population[ppos]) != parents.end());
+
+      parents.push_back(_population[ppos]);
+    }
+
+    for (unsigned j = 0; j < breedProd; j++) {
+      chromossome* chr = chromossome::crossover(parents);
+      chr->id = _nextid;
+      _nextid++;
+      children.push_back(chr);
+    }
+
+  }
+
+  for (unsigned i = 0; i < children.size(); i++) {
+    _population.push_back(children[i]);
+  }
 
 }
 
 //mutate pop*mutRate chromossomes
 void gaMethod::mutate()
 {
-   unsigned mcount = cint((unsigned) ((double) _population.size() * popMutRate));
-   vector<unsigned> chvec;
-   
-   mcount = min(mcount,(unsigned) cint((1.0f - inertCoef)*(double)_population.size()));
-   for (unsigned i = 0; i < mcount; i++)
-   {
-      unsigned chind;
+  unsigned mcount = cint((unsigned) ((double) _population.size() * popMutRate));
+  vector<unsigned> chvec;
 
-      do {
-	 
-	 chind = randU(inertCoef*_population.size(), _population.size() - 1);
+  mcount = min(mcount,(unsigned) cint((1.0f - inertCoef)*(double)
+                                      _population.size()));
+  for (unsigned i = 0; i < mcount; i++) {
+    unsigned chind;
 
-      } while (find(chvec.begin(), chvec.end(), chind) != chvec.end());
-   
-      chvec.push_back(chind);
+    do {
 
-      _population[chind]->mutate(chrMutRate, genMutRate);
+      chind = randU(inertCoef*_population.size(), _population.size() - 1);
 
-   }
+    } while (find(chvec.begin(), chvec.end(), chind) != chvec.end());
+
+    chvec.push_back(chind);
+
+    _population[chind]->mutate(chrMutRate, genMutRate);
+
+  }
 
 }
