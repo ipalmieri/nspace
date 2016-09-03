@@ -4,33 +4,41 @@
 #include <neuron.h>
 #include <synapse.h>
 
-namespace neural
+namespace neural {
+
+class ineuron : public neuron
 {
+ public:
 
-   class ineuron : public neuron
-   {
-     public:
-      
-      friend class neuralNet;
-      
-      virtual void setInput(const nsignal &in) { _input = in; }
-      inline nweight getInputWeight() const { return _inweight; }
-      inline void setInputWeight(const nweight &w) { _inweight = 0.0f; }
-      nsignal calcWInput();
+  friend class neuralNet;
 
-     protected:
-      
-      ineuron(const groupId &gid = 0);
-      ~ineuron();
+  virtual void setInput(const nsignal& in)
+  {
+    _input = in;
+  }
+  inline nweight getInputWeight() const
+  {
+    return _inweight;
+  }
+  inline void setInputWeight(const nweight& w)
+  {
+    _inweight = 0.0f;
+  }
+  nsignal calcWInput();
 
-      void normalizeWeights();
+ protected:
 
-      nsignal _input;
-      nweight _inweight;
+  ineuron(const groupId& gid = 0);
+  ~ineuron();
 
-     private:
+  void normalizeWeights();
 
-   };
+  nsignal _input;
+  nweight _inweight;
+
+ private:
+
+};
 }
 
 #endif

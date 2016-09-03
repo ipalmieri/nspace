@@ -4,95 +4,126 @@
 #include "neuralnet.h"
 #include "genetic.h"
 
-namespace neural
+namespace neural {
+//neural net weights as genes for ga
+class gaWeight : public advtec::gene
 {
-   //neural net weights as genes for ga
-   class gaWeight : public advtec::gene
-   {
-     public:
-      gaWeight(synapse *syn) { _synapse = syn; }
-      ~gaWeight() {}
+ public:
+  gaWeight(synapse* syn)
+  {
+    _synapse = syn;
+  }
+  ~gaWeight() {}
 
-      void mutate(const double &rate);
-      gene *createCopy();
-      void initRand(const double &start, const double &end);
-      
-      void apply() { if (_synapse) _synapse->setWeight(value); }
-      synapse *getSynapse() { return _synapse; }
-     
-      nweight value;
+  void mutate(const double& rate);
+  gene* createCopy();
+  void initRand(const double& start, const double& end);
 
-     protected:
+  void apply()
+  {
+    if (_synapse) {
+      _synapse->setWeight(value);
+    }
+  }
+  synapse* getSynapse()
+  {
+    return _synapse;
+  }
 
-      synapse *_synapse;
-   };
+  nweight value;
 
-   
-   //neural net weightsbias as genes for ga
-   class gaBias : public advtec::gene
-   {
-     public:
-      gaBias(neuron *nr) { _neuron = nr; }
-      ~gaBias() {}
+ protected:
 
-      void mutate(const double &rate);
-      gene *createCopy();
-      void initRand(const double &start, const double &end);
-      
-      void apply() { if (_neuron) _neuron->setWeight(value); }
-      neuron *getNeuron() { return _neuron; }
-
-      nweight value;
-
-     protected:
-
-      neuron *_neuron;
-   };
-   
-
-   //struct used to sort solutions
-   class chromEval
-   {
-     public:
-      nsignal error;
-      advtec::chromossome *solution;
-
-      bool operator <(const chromEval &b) { return (this->error < b.error); }
-      bool operator >(const chromEval &b) { return (this->error > b.error); }
-   };
+  synapse* _synapse;
+};
 
 
-   //neural net weight gaTrainer
-   class gaNetTrainer : public advtec::gaMethod
-   {
-     public:
-      gaNetTrainer(neuralNet *net, const unsigned &pinit);
-      virtual ~gaNetTrainer();
+//neural net weightsbias as genes for ga
+class gaBias : public advtec::gene
+{
+ public:
+  gaBias(neuron* nr)
+  {
+    _neuron = nr;
+  }
+  ~gaBias() {}
 
-      void addData(std::vector<nsignal> &input, std::vector<nsignal> &output);
-      void trainLoop(const unsigned &maxgenerations);
+  void mutate(const double& rate);
+  gene* createCopy();
+  void initRand(const double& start, const double& end);
 
-      void setSolution(advtec::chromossome *chr);
-      advtec::chromossome *getSolution(const unsigned &index);
-      tools::Real netError() { return evalError(_population[0]); }
+  void apply()
+  {
+    if (_neuron) {
+      _neuron->setWeight(value);
+    }
+  }
+  neuron* getNeuron()
+  {
+    return _neuron;
+  }
 
-      void printSolutions();
+  nweight value;
 
-     protected:
+ protected:
 
-      void init(const unsigned &pinit);
+  neuron* _neuron;
+};
 
-      void evalPopulation();
 
-      nsignal evalError(advtec::chromossome *chr);
-      tools::Real outputError(std::vector<nsignal> &ynet);
+//struct used to sort solutions
+class chromEval
+{
+ public:
+  nsignal error;
+  advtec::chromossome* solution;
 
-      neuralNet *_net;
+  bool operator <(const chromEval& b)
+  {
+    return (this->error < b.error);
+  }
+  bool operator >(const chromEval& b)
+  {
+    return (this->error > b.error);
+  }
+};
 
-      std::vector< std::vector<nsignal> > _inData;
-      std::vector< std::vector<nsignal> > _ouData;
 
-   };
+//neural net weight gaTrainer
+class gaNetTrainer : public advtec::gaMethod
+{
+ public:
+  gaNetTrainer(neuralNet* net, const unsigned& pinit);
+  virtual ~gaNetTrainer();
+
+  void addData(tools::vectorN<nsignal>& input, tools::vectorN<nsignal>& output);
+  void trainLoop(const unsigned& maxgenerations);
+
+  void setSolution(advtec::chromossome* chr);
+  advtec::chromossome* getSolution(const unsigned& index);
+  tools::Real netError()
+  {
+    return evalError(_population[0]);
+  }
+
+  void printSolutions();
+
+ protected:
+
+  void init(const unsigned& pinit);
+
+  void evalPopulation();
+
+  nsignal evalError(advtec::chromossome* chr);
+  tools::Real outputError(tools::vectorN<nsignal>& ynet);
+
+  neuralNet* _net;
+
+  // fix this: use multiSignal
+  std::vector< tools::vectorN<nsignal> > _inData;
+  std::vector< tools::vectorN<nsignal> > _ouData;
+
+};
 
 }
 

@@ -4,49 +4,75 @@
 #include "graph/dedge.h"
 #include "afunction.h"
 
-namespace neural
+namespace neural {
+class synapse;
+class neuron;
+
+typedef tools::dedge<neuron*, synapse*> gedge;
+typedef typename gedge::dedgeMap edgeMap;
+
+class synapse
 {
-   class synapse;
-   class neuron;
-   
-   typedef tools::dedge<neuron *, synapse *> gedge;
-   typedef typename gedge::dedgeMap edgeMap;
-  
-   class synapse 
-   {
-     public:
-      
-      friend class neuralNet;
-      
-      inline gedge *getEdge() const { return _edge; }
-      inline tools::edgeId getEdgeId() { return _edge->id(); }
+ public:
 
-      inline void setFunction(afunction *func) { _actfunc = func; }
-      inline afunction *getFunction() { return _actfunc; }
+  friend class neuralNet;
 
-      void update();
-      inline nweight getWeight() const { return _weight; }
-      inline void setWeight(const nweight &w) { _weight = w; }
+  inline gedge* getEdge() const
+  {
+    return _edge;
+  }
+  inline tools::edgeId getEdgeId()
+  {
+    return _edge->id();
+  }
 
-      inline nsignal getNOutput() { return _output; }
-      inline nsignal getOutput() const { return _weight * _output; }
+  inline void setFunction(afunction* func)
+  {
+    _actfunc = func;
+  }
+  inline afunction* getFunction()
+  {
+    return _actfunc;
+  }
 
-     protected:
+  void update();
+  inline nweight getWeight() const
+  {
+    return _weight;
+  }
+  inline void setWeight(const nweight& w)
+  {
+    _weight = w;
+  }
 
-      synapse();
-      ~synapse();
-      
-      inline void attachEdge(gedge *edge) { _edge = edge; }
+  inline nsignal getNOutput()
+  {
+    return _output;
+  }
+  inline nsignal getOutput() const
+  {
+    return _weight * _output;
+  }
 
-      gedge *_edge;
-      nsignal _output; 
-      nweight _weight;
- 
-      afunction *_actfunc;
+ protected:
 
-     private:
-  
-   };
+  synapse();
+  ~synapse();
+
+  inline void attachEdge(gedge* edge)
+  {
+    _edge = edge;
+  }
+
+  gedge* _edge;
+  nsignal _output;
+  nweight _weight;
+
+  afunction* _actfunc;
+
+ private:
+
+};
 
 }
 

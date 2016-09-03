@@ -3,100 +3,111 @@
 
 #include "neuralnet.h"
 
-namespace neural
+namespace neural {
+//backNeuron - backward copy of a neuron
+class backNeuron : public ineuron
 {
-   //backNeuron - backward copy of a neuron
-   class backNeuron : public ineuron 
-   {
 
-      friend class backNet;
+  friend class backNet;
 
-     public:
+ public:
 
-      nsignal acc;
+  nsignal acc;
 
-      neuron *getNeuron() { return _fneuron; }
-      void update();
-      
-     protected:
-      backNeuron(neuron *nr, const groupId &gid=0);
-      ~backNeuron() {}
+  neuron* getNeuron()
+  {
+    return _fneuron;
+  }
+  void update();
 
-      neuron *_fneuron;
-   };
+ protected:
+  backNeuron(neuron* nr, const groupId& gid=0);
+  ~backNeuron() {}
+
+  neuron* _fneuron;
+};
 
 
-   //backSynapse - backward copy of a synapse
-   class backSynapse : public synapse
-   {
-      friend class backNet;
+//backSynapse - backward copy of a synapse
+class backSynapse : public synapse
+{
+  friend class backNet;
 
-     public:
+ public:
 
-      nsignal acc;
+  nsignal acc;
 
-      synapse *getSynapse() { return _fsynapse; }
+  synapse* getSynapse()
+  {
+    return _fsynapse;
+  }
 
-     protected:
-      backSynapse(synapse *sn);
-      ~backSynapse() {}
+ protected:
+  backSynapse(synapse* sn);
+  ~backSynapse() {}
 
-      synapse *_fsynapse;
-      
-   };
+  synapse* _fsynapse;
 
-   
-   //backward neural network
-   class backNet : public neuralNet
-   {
-     public:
-      backNet(neuralNet *net);
-      ~backNet();
+};
 
-     protected:
-     
-      void cloneNet(neuralNet *net);
-      backNeuron *createNeuron(neuron *nr);
 
-      neuron *createNeuron() { return NULL; }
-      void deleteNeuron(neuron *nr) {}
-      void deleteNeuron(const tools::nodeId &id) {}
-      void connectNeurons(neuron *nr1, neuron *nr2) {}
-      void disconnectNeurons(neuron *nr1, neuron *nr2) {}          
+//backward neural network
+class backNet : public neuralNet
+{
+ public:
+  backNet(neuralNet* net);
+  ~backNet();
 
-   };
+ protected:
 
-   //backProp trainer
-   class backProp
-   {
-     public:
-      backProp(neuralNet *net, const nsignal &neta);
-      ~backProp();
+  void cloneNet(neuralNet* net);
+  backNeuron* createNeuron(neuron* nr);
 
-      void addData(std::vector<nsignal> &input, std::vector<nsignal> &output);
+  neuron* createNeuron()
+  {
+    return NULL;
+  }
+  void deleteNeuron(neuron* nr) {}
+  void deleteNeuron(const tools::nodeId& id) {}
+  void connectNeurons(neuron* nr1, neuron* nr2) {}
+  void disconnectNeurons(neuron* nr1, neuron* nr2) {}
 
-      void stepEpoch();
-      void trainLoop(const unsigned &maxiter);
+};
 
-      neuralNet *getBackNet() { return (neuralNet *)_backNet; }
+//backProp trainer
+class backProp
+{
+ public:
+  backProp(neuralNet* net, const nsignal& neta);
+  ~backProp();
 
-      tools::Real netError();
+  void addData(tools::vectorN<nsignal>& input, tools::vectorN<nsignal>& output);
 
-      nsignal eta;
+  void stepEpoch();
+  void trainLoop(const unsigned& maxiter);
 
-     protected:
+  neuralNet* getBackNet()
+  {
+    return (neuralNet*)_backNet;
+  }
 
-      void accumulateErrors();
-      
-      neuralNet *_forwardNet;
-      backNet *_backNet;
+  tools::Real netError();
 
-      afunction *_errorFunc;
-      afunction *_derFunc;
+  nsignal eta;
 
-      std::vector< std::vector<nsignal> > _inData;
-      std::vector< std::vector<nsignal> > _ouData;
-   };
+ protected:
+
+  void accumulateErrors();
+
+  neuralNet* _forwardNet;
+  backNet* _backNet;
+
+  afunction* _errorFunc;
+  afunction* _derFunc;
+
+  std::vector< tools::vectorN<nsignal> > _inData;
+  std::vector< tools::vectorN<nsignal> > _ouData;
+};
 }
 
 #endif

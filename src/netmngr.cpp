@@ -9,9 +9,9 @@ using namespace tools;
 using namespace neural;
 using namespace std;
 
-netManager::netManager(neuralNet *nrnet)
+netManager::netManager(neuralNet* nrnet)
 {
-   _neuralnet = nrnet;
+  _neuralnet = nrnet;
 }
 
 netManager::~netManager()
@@ -19,73 +19,77 @@ netManager::~netManager()
 
 }
 
-void netManager::saveFile(const string &filename)
+void netManager::saveFile(const string& filename)
 {
-   //fix this TODO
+  //fix this TODO
 }
 
-void netManager::loadFile(const string &filename)
+void netManager::loadFile(const string& filename)
 {
-   //fix this TODO
+  //fix this TODO
 }
 
 //debug functions
 void netManager::printNeurons()
 {
-   cout << endl << "==== PRINTING NEURONS FOR NEURAL NET ====" << endl;
+  cout << endl << "==== PRINTING NEURONS FOR NEURAL NET ====" << endl;
 
-   for (nodeMap::const_iterator it = _neuralnet->_graph->nodeMapBegin(); it != _neuralnet->_graph->nodeMapEnd(); ++it)
-   {
-      gnode *nd = it->second;
-      neuron *nr = (neuron *) nd->getProperty();
+  for (nodeMap::const_iterator it = _neuralnet->_graph->nodeMapBegin();
+       it != _neuralnet->_graph->nodeMapEnd(); ++it) {
+    gnode* nd = it->second;
+    neuron* nr = (neuron*) nd->getProperty();
 
 
-      cout << "***NEURON " << nd->id();
-      
-      cout << "   Output: ";
-      cout << setw(5) << setiosflags(ios::fixed) << setprecision(3);
-      cout << nr->getOutput() << "   Bias: ";
-      cout << setw(5) << setiosflags(ios::fixed) << setprecision(3);
-      cout << nr->getWeight() << endl;
+    cout << "***NEURON " << nd->id();
 
-      cout << "   I: ";
-      
-      for (edgeMap::const_iterator jt = nd->inputEdgesBegin(); jt != nd->inputEdgesEnd(); ++jt)
-	 cout << (jt->second)->inNode()->id() << " ";
+    cout << "   Output: ";
+    cout << setw(5) << setiosflags(ios::fixed) << setprecision(3);
+    cout << nr->getOutput() << "   Bias: ";
+    cout << setw(5) << setiosflags(ios::fixed) << setprecision(3);
+    cout << nr->getWeight() << endl;
 
-      cout <<  endl;
+    cout << "   I: ";
 
-      cout << "   O: ";
+    for (edgeMap::const_iterator jt = nd->inputEdgesBegin();
+         jt != nd->inputEdgesEnd(); ++jt) {
+      cout << (jt->second)->inNode()->id() << " ";
+    }
 
-      for (edgeMap::const_iterator jt = nd->outputEdgesBegin(); jt != nd->outputEdgesEnd(); ++jt)
-	 cout << (jt->second)->outNode()->id() << " ";
-	 
-      cout << endl;
-   }
+    cout <<  endl;
 
-   cout << "==== END ====" << endl << endl;
+    cout << "   O: ";
+
+    for (edgeMap::const_iterator jt = nd->outputEdgesBegin();
+         jt != nd->outputEdgesEnd(); ++jt) {
+      cout << (jt->second)->outNode()->id() << " ";
+    }
+
+    cout << endl;
+  }
+
+  cout << "==== END ====" << endl << endl;
 }
 
 void netManager::printSynapses()
 {
-   cout << endl << "==== PRINTING SYNAPSES FOR NEURAL NET ====" << endl;
+  cout << endl << "==== PRINTING SYNAPSES FOR NEURAL NET ====" << endl;
 
-   agraph *gr = _neuralnet->_graph;
+  agraph* gr = _neuralnet->_graph;
 
-   for (edgeMap::const_iterator it = gr->edgeMapBegin(); it != gr->edgeMapEnd(); ++it)
-   {
-      gedge *ed = it->second;
-      synapse *sn = (synapse *) ed->getProperty();
+  for (edgeMap::const_iterator it = gr->edgeMapBegin(); it != gr->edgeMapEnd();
+       ++it) {
+    gedge* ed = it->second;
+    synapse* sn = (synapse*) ed->getProperty();
 
-      cout << "***SYNAPSE " << ed->id();
-      cout << ": " << ed->inNode()->id();
-      cout << " -> " << ed->outNode()->id();
-      cout << " W=" << sn->getWeight();
-      cout << endl;
-   }
+    cout << "***SYNAPSE " << ed->id();
+    cout << ": " << ed->inNode()->id();
+    cout << " -> " << ed->outNode()->id();
+    cout << " W=" << sn->getWeight();
+    cout << endl;
+  }
 
-   cout << "==== END ====" << endl << endl;
+  cout << "==== END ====" << endl << endl;
 }
 
-  
+
 
