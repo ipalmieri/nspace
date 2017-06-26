@@ -24,7 +24,8 @@ libadvtec_adir = $(includedir)/advtec
 libadvtec_a_HEADERS = 	\
 			include/advtec.h \
 			include/sorting.h \
-			include/genetic.h 
+			include/genetic.h \
+			include/ufds.h
 
 
 # the sources to add to the library and to add to the source distribution

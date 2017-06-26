@@ -110,24 +110,10 @@ string tools::lastError()
 {
   char e[ERROR_BUFSIZE];
 
-#if (_POSIX_C_SOURCE >= 200112L) && ! _GNU_SOURCE
-
-  // (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE
-  // for POSIX complient version
-  // compile with-D_XOPEN_SOURCE=600 or -D_POSIX_C_SOURCE=200112L
-  // without -D_GNU_SOURCE is needed
-
   if (strerror_r(errno, e, ERROR_BUFSIZE) != 0) {
     return string("Can't provide error, check strerror_r()");
   }
   return string(e);
-
-#else
-
-  return string(strerror_r(errno, e, ERROR_BUFSIZE));
-
-#endif
-
 }
 
 // return formatted error string

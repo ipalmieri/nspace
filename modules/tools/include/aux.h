@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#define ERROR_BUFSIZE 512
+#define ERROR_BUFSIZE 1024
 
 //auxiliary functions and definitions
 
